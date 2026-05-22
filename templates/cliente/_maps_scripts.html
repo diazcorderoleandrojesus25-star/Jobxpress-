@@ -1,0 +1,9 @@
+{% load static %}
+<script src="{% static 'js/maps.js' %}?v=rest2"></script>
+<script>
+window.JobxpressRequestConfig = {
+    serviceId: {{ servicio_id|default:"null" }},
+    serviceName: "{{ servicio_nombre|default:''|escapejs }}"
+};
+</script>
+<script src="{% static 'js/service-request.js' %}?v=backend1"></script>

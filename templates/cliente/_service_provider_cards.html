@@ -1,0 +1,23 @@
+{% load static %}
+{% if prestadores_db %}
+{% for p in prestadores_db %}
+<div class="usuario">
+    <img src="{% if p.foto_url %}{{ p.foto_url }}{% else %}{% static 'images/usuario.png' %}{% endif %}" alt="Foto de perfil del prestador">
+    <div class="info">
+        <h3>{{ p.usuario.nombre }} {{ p.usuario.apellido }}</h3>
+        <p>{{ p.descripcion|default:"Prestador disponible para atender tu solicitud." }}</p>
+        <p><img class="icon-hora" src="{% static 'images/despertador.png' %}" alt="Horario"> {{ p.dias_atencion|default:"Lun-Sab" }} {{ p.horario_atencion|default:"8:00am - 6:00pm" }}</p>
+        <div class="acciones">
+            {% if p.whatsapp %}
+            <a href="https://wa.me/{{ p.whatsapp }}" target="_blank">
+                <button class="btn-whatsapp">WhatsApp</button>
+            </a>
+            {% endif %}
+            <button class="btn-acuerdo" onclick="abrirModal('{{ p.usuario.nombre|escapejs }} {{ p.usuario.apellido|escapejs }}', {{ p.id_prestador }})">Enviar acuerdo</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-providers-message" role="status">no hay prestadores disponibles</div>
+{% endif %}

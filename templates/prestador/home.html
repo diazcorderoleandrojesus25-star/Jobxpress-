@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobXpress - Prestador</title>
+
+    <link rel="stylesheet" href="{% static 'css/prestador.css' %}">
+    <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/lucide-icons@latest/font/lucide.css" rel="stylesheet">
+</head>
+<body class="prestador-modern">
+
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+   <nav class="nav-links">
+      <a href="/prestador/home" class="activo">Inicio</a>
+      <a href="/prestador/servicioPrestador">Tu servicio</a>
+      <a href="/prestador/perfil">Tu Perfil</a>
+      <a href="/prestador/ganancias">Tus ganancias</a>
+      <a href="/prestador/valoraciones">Tus valoraciones</a>
+      <a href="/prestador/agenda">Mi agenda</a>
+      <a href="/prestador/dashboard">Dashboard</a>
+
+      <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+          Cerrar sesion
+      </a>
+      <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+  </nav>
+</header>
+
+<main class="pm-shell">
+    <section class="pm-hero">
+        <p class="pm-eyebrow">Panel del prestador</p>
+        <h1>Hola, <span>{{ request.usuario.nombre|default:"Prestador" }}</span></h1>
+        <p>Gestiona tus servicios, revisa tus ganancias, consulta tu agenda y mantén el control total desde tu panel.</p>
+        <div class="pm-actions">
+            <a class="pm-btn primary" href="/prestador/agenda">Ver agenda</a>
+            <a class="pm-btn ghost" href="/prestador/servicioPrestador">Editar servicio</a>
+        </div>
+    </section>
+
+    <section class="pm-grid pm-grid-4">
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2"></rect><path d="M16 12h5"></path><circle cx="16" cy="12" r="1"></circle></svg></div>
+            <h3>Ganancias</h3>
+            <div class="pm-stat">$ {{ ganancias }} COP</div>
+            <a class="pm-btn ghost" href="/prestador/ganancias">Ver detalle</a>
+        </article>
+
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="2"></rect><path d="M9 7V5h6v2"></path><path d="M3 12h18"></path></svg></div>
+            <h3>Servicios activos</h3>
+            <div class="pm-stat">{{ servicios_activos }}</div>
+            <a class="pm-btn ghost" href="/prestador/servicioPrestador">Gestionar</a>
+        </article>
+
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.2L18 21l-6-3.8L6 21l1.5-7.8L2 9h7z"></path></svg></div>
+            <h3>Valoraciones</h3>
+            <div class="pm-stat">{{ promedio }} ★</div>
+            <a class="pm-btn ghost" href="/prestador/valoraciones">Ver reseñas</a>
+        </article>
+
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8 3v4"></path><path d="M16 3v4"></path><path d="M3 11h18"></path></svg></div>
+            <h3>Proximas citas</h3>
+            <div class="pm-stat">{{ proximas|length }}</div>
+            <a class="pm-btn ghost" href="/prestador/agenda">Abrir agenda</a>
+        </article>
+    </section>
+
+    <section class="pm-section">
+        <h2>Actividad reciente</h2>
+        <ul class="pm-list">
+            {% if proximas %}
+                {% for c in proximas %}
+                <li>
+                    <span><strong>{{ c.fecha }}</strong> — {{ c.servicio.nombre|default:"Servicio" }}</span>
+                    <span class="pm-pill">Programada</span>
+                </li>
+                {% endfor %}
+            {% else %}
+                <li class="pm-empty"><span>🧾</span>No tienes actividad reciente.</li>
+            {% endif %}
+        </ul>
+    </section>
+</main>
+
+<footer class="footer">
+    <p>© 2025 JobXpress | Conectando profesionales con clientes</p>
+</footer>
+
+</body>
+</html>

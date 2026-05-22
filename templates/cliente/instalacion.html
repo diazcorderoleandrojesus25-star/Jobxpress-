@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'css/stylesplomeria.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/cliente.css' %}">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <title>Instalación de equipos | JobXpress</title>
+
+    
+</head>
+
+<body class="cliente-layout-page cliente-service-page">
+
+<header class="navbar">
+    <div class="logo">
+        <img class="logo-full" src="{% static 'images/logo_sidebar_blue.png' %}" alt="JobXpress">
+    </div>
+    <nav class="nav-links">
+        <a href="/cliente/home" class="active">Inicio</a>
+        <a href="/cliente/historial">Historial Contrataciones</a>
+        <a href="/cliente/perfil">Tu perfil</a>
+        <a href="/cliente/dashboard">Dashboard</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesión</a>
+        <form id="logout-form" action="/logout" method="post" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="contenedor">
+
+
+    <h1>Instalación de equipos</h1>
+    <p>Profesionales disponibles para ayudarte con la instalación segura y eficiente de electrodomésticos,
+        equipos tecnológicos y sistemas eléctricos en tu hogar o negocio.</p>
+
+    <div class="tarjetas-usuarios">
+        {% include 'cliente/_service_provider_cards.html' %}
+    </div>
+
+</main>
+
+<!-- MODAL -->
+<div id="modalAcuerdo" class="modal-acuerdo">
+    <div class="modal-contenido">
+        <span class="cerrar" onclick="cerrarModal()">&times;</span>
+        <h2>Nuevo Acuerdo</h2>
+
+        <form id="formAcuerdo">
+            <div class="fila">
+                <div class="form-grupo">
+                    <label>Fecha</label>
+                    <input type="date" id="fecha" required>
+                </div>
+                <div class="form-grupo">
+                    <label>Hora</label>
+                    <input type="time" id="hora" required>
+                </div>
+            </div>
+
+            <div class="form-grupo">
+                <label>Monto (COP)</label>
+                <input type="number" id="monto" min="1000" required>
+            </div>
+
+            <div class="form-grupo">
+                <label>Dirección</label>
+                <input type="text" id="direccion" placeholder="Ej: Calle 45 #12-30" required>
+            </div>
+            <div class="form-grupo">
+                <label>Ubica la direccion en el mapa</label>
+                <div class="mapa-wrap">
+                    <div id="mapaDireccion"></div>
+                </div>
+                <button type="button" id="btnValidarDireccion" class="btn-validar">Validar direccion</button>
+                <small class="ayuda-direccion" id="estadoDireccion">Sin validar</small>
+            </div>
+
+
+            <div class="form-grupo">
+                <label>Descripción</label>
+                <textarea id="descripcion" required></textarea>
+            </div>
+
+            <button class="btn-guardar" type="submit">Guardar acuerdo</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let prestadorSeleccionado = "";
+    const clienteActual = "{ request.usuario.nombre|default:'' }";
+
+    function abrirModal(prestador, prestadorId) {
+        prestadorSeleccionado = prestador;
+        prestadorSeleccionadoId = prestadorId;
+        prestadorSeleccionado = prestador;
+        modalAcuerdo.style.display = "flex";
+        setTimeout(() => {
+            if (window.JobxpressMaps) {
+                window.JobxpressMaps.initMap();
+            }
+        }, 120);
+    }
+
+    function cerrarModal() {
+        modalAcuerdo.style.display = "none";
+        formAcuerdo.reset();
+    }
+
+    const fechaInput = document.getElementById("fecha");
+    const hoy = new Date();
+    const max = new Date();
+    max.setMonth(hoy.getMonth() + 1);
+
+    fechaInput.min = hoy.toISOString().split("T")[0];
+    fechaInput.max = max.toISOString().split("T")[0];
+
+    document.getElementById("formAcuerdo").addEventListener("submit", e => {
+        e.preventDefault();
+
+        const acuerdo = {
+            id: Date.now(),
+            cliente: clienteActual,
+            prestador: prestadorSeleccionado,
+            fecha: fecha.value,
+            hora: hora.value,
+            monto: monto.value,
+            direccion: direccion.value,
+            descripcion: descripcion.value,
+            estado: "Pendiente"
+        };
+
+        const historial = JSON.parse(localStorage.getItem("historialContrataciones")) || [];
+        historial.push(acuerdo);
+        localStorage.setItem("historialContrataciones", JSON.stringify(historial));
+
+        const solicitudes = JSON.parse(localStorage.getItem("solicitudesPendientes")) || [];
+        solicitudes.push({
+            id: acuerdo.id,
+            servicio: "Instalación de equipos",
+            cliente: clienteActual,
+            fecha: acuerdo.fecha + " " + acuerdo.hora,
+            ubicacion: acuerdo.direccion,
+            detalles: acuerdo.descripcion,
+            monto: acuerdo.monto,
+            prestador: acuerdo.prestador,
+            estado: "Pendiente"
+        });
+        localStorage.setItem("solicitudesPendientes", JSON.stringify(solicitudes));
+
+        Swal.fire({
+            title: "¡Acuerdo enviado!",
+            text: "El prestador revisará tu solicitud.",
+            icon: "success",
+            confirmButtonColor: "#2d6cdf"
+        });
+
+        cerrarModal();
+    });
+</script>
+
+{% include 'cliente/_maps_scripts.html' %}
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

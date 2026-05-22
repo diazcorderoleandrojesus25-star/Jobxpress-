@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Perfil | JobXpress</title>
+    <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/lucide-icons@latest/font/lucide.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="prestador-modern">
+
+<header class="navbar">
+  <div class="logo">JobXpress</div>
+  <nav class="nav-links">
+      <a href="/prestador/home">Inicio</a>
+      <a href="/prestador/servicioPrestador">Tu servicio</a>
+      <a href="/prestador/perfil" class="activo">Tu Perfil</a>
+      <a href="/prestador/ganancias">Tus ganancias</a>
+      <a href="/prestador/valoraciones">Tus valoraciones</a>
+      <a href="/prestador/agenda">Mi agenda</a>
+      <a href="/prestador/dashboard">Dashboard</a>
+
+      <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
+      <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+  </nav>
+</header>
+
+<main class="pm-shell">
+  <section class="pm-hero">
+    <p class="pm-eyebrow"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M7 16h6"></path></svg> Perfil profesional</p>
+    <h1>Tu perfil</h1>
+    <p>Manten tu informacion actualizada para transmitir confianza y recibir mas solicitudes.</p>
+  </section>
+
+  <section class="pm-section">
+    <div class="pm-card pm-profile">
+      <div class="pm-avatar">
+        {% if foto_url %}
+        <img src="{{ foto_url }}" alt="Foto de perfil">
+        {% else %}
+        <img src="{% static 'images/usuario.png' %}" alt="Foto de perfil">
+        {% endif %}
+      </div>
+      <div>
+        <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
+        <div class="pm-info-grid">
+          <div class="pm-info-item"><strong>Email</strong><span>{{ usuario.email }}</span></div>
+          <div class="pm-info-item"><strong>Telefono</strong><span>{{ usuario.telefono }}</span></div>
+          <div class="pm-info-item"><strong>Direccion</strong><span>{{ usuario.direccion }}</span></div>
+          <div class="pm-info-item"><strong>Rol</strong><span>Prestador de servicios</span></div>
+        </div>
+        <div class="pm-actions" style="margin-top:16px;">
+          <a class="pm-btn primary" href="#" id="btnEditarPerfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.8-3.5 5-5 8-5s6.2 1.5 8 5"></path></svg> Editar perfil</a>
+          <a class="pm-btn ghost" href="/prestador/servicioPrestador"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7a5 5 0 0 1-6 6l-7 7-3-3 7-7a5 5 0 0 1 6-6"></path></svg> Editar servicio</a>
+          <a class="pm-btn ghost" href="/prestador/agenda"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8 3v4"></path><path d="M16 3v4"></path><path d="M3 11h18"></path></svg> Ver agenda</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% if request.GET.updated %}
+    <section class="pm-section">
+      <div class="pm-empty"><span>OK</span>Informacion actualizada correctamente.</div>
+    </section>
+  {% endif %}
+</main>
+
+<div class="pm-modal-backdrop" id="modalPerfil">
+  <div class="pm-modal">
+    <h3>Editar informacion</h3>
+    <form method="POST" action="/prestador/perfil/actualizar" enctype="multipart/form-data" id="formPerfilPrestador">
+      {% csrf_token %}
+      <div class="pm-info-item"><strong>Nombre</strong><input name="nombre" value="{{ usuario.nombre }}" required></div>
+      <div class="pm-info-item"><strong>Apellido</strong><input name="apellido" value="{{ usuario.apellido }}" required></div>
+      <div class="pm-info-item"><strong>Email</strong><input name="email" type="email" value="{{ usuario.email }}" required></div>
+      <div class="pm-info-item"><strong>Telefono</strong><input name="telefono" id="prestadorTelefono" value="{{ usuario.telefono }}" inputmode="numeric" maxlength="10" minlength="10" pattern="[0-9]{10}" autocomplete="tel" required></div>
+      <div class="pm-info-item"><strong>Direccion</strong><input name="direccion" id="prestadorDireccion" value="{{ usuario.direccion }}" maxlength="120" autocomplete="street-address" placeholder="Ej: Calle 45 #12-30" required></div>
+      <div class="pm-info-item">
+        <strong>Foto de perfil</strong>
+        <div class="pm-upload-box">
+          {% if foto_url %}
+          <div class="pm-upload-current">
+            <img src="{{ foto_url }}" alt="Foto actual">
+            <label class="pm-check-remove">
+              <input type="checkbox" name="eliminar_foto" value="1">
+              Quitar foto actual
+            </label>
+          </div>
+          {% endif %}
+          <input name="foto_perfil" type="file" accept="image/*">
+          <small>Sube una imagen JPG, PNG o WEBP. Si eliges una nueva, reemplazara la actual.</small>
+        </div>
+      </div>
+      <button class="pm-btn primary" type="submit">Guardar cambios</button>
+      <a href="#" class="pm-btn ghost" id="cerrarPerfil">Cancelar</a>
+    </form>
+  </div>
+</div>
+
+<script>
+  const btnEditarPerfil = document.getElementById("btnEditarPerfil");
+  const modalPerfil = document.getElementById("modalPerfil");
+  const cerrarPerfil = document.getElementById("cerrarPerfil");
+  const formPerfilPrestador = document.getElementById("formPerfilPrestador");
+  const telefonoPrestador = document.getElementById("prestadorTelefono");
+  const direccionPrestador = document.getElementById("prestadorDireccion");
+  const direccionRegex = /\b(calle|cl|carrera|cra|cr|avenida|av|diagonal|dg|transversal|tv|autopista|ap|via|vereda|manzana|mz)\b/i;
+  if (btnEditarPerfil) {
+    btnEditarPerfil.addEventListener("click", (e) => {
+      e.preventDefault();
+      modalPerfil.style.display = "flex";
+    });
+  }
+  if (cerrarPerfil) {
+    cerrarPerfil.addEventListener("click", (e) => {
+      e.preventDefault();
+      modalPerfil.style.display = "none";
+    });
+  }
+  if (telefonoPrestador) {
+    telefonoPrestador.addEventListener("input", () => {
+      telefonoPrestador.value = telefonoPrestador.value.replace(/\D/g, "").slice(0, 10);
+    });
+  }
+  if (formPerfilPrestador) {
+    formPerfilPrestador.addEventListener("submit", (e) => {
+      const telefono = (telefonoPrestador?.value || "").trim();
+      const direccion = (direccionPrestador?.value || "").trim().replace(/\s+/g, " ");
+      const direccionValida =
+        direccion.length >= 8 &&
+        direccion.length <= 120 &&
+        /^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ#.,\-/\s]+$/.test(direccion) &&
+        direccionRegex.test(direccion) &&
+        /\d/.test(direccion) &&
+        (direccion.includes("#") || direccion.includes("-"));
+
+      if (!/^\d{10}$/.test(telefono)) {
+        e.preventDefault();
+        Swal.fire({
+          icon: "error",
+          title: "Telefono invalido",
+          text: "Ingresa solo numeros y usa exactamente 10 digitos."
+        });
+        telefonoPrestador.focus();
+        return;
+      }
+
+      if (!direccionValida) {
+        e.preventDefault();
+        Swal.fire({
+          icon: "error",
+          title: "Direccion invalida",
+          text: "Ingresa una direccion valida, por ejemplo: Calle 45 #12-30."
+        });
+        direccionPrestador.focus();
+        return;
+      }
+
+      direccionPrestador.value = direccion;
+    });
+  }
+</script>
+
+{% if request.GET.error == "foto" %}
+<script>
+Swal.fire({
+  icon: "error",
+  title: "Imagen invalida",
+  text: "La foto debe ser una imagen valida."
+});
+</script>
+{% endif %}
+
+{% if request.GET.error == "telefono" %}
+<script>
+Swal.fire({
+  icon: "error",
+  title: "Telefono invalido",
+  text: "El telefono debe contener solo numeros y tener exactamente 10 digitos."
+});
+</script>
+{% endif %}
+
+{% if request.GET.error == "direccion" %}
+<script>
+Swal.fire({
+  icon: "error",
+  title: "Direccion invalida",
+  text: "Ingresa una direccion valida, por ejemplo: Calle 45 #12-30."
+});
+</script>
+{% endif %}
+
+</body>
+</html>

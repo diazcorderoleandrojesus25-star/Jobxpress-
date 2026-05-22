@@ -1,0 +1,332 @@
+﻿/* ===== Fondo general ===== */
+body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, rgba(41, 67, 90, 0.75), rgba(111, 156, 149, 0.65)), url("../images/fondo.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* ===== Contenedor principal ===== */
+.container {
+    background-color: rgba(243, 239, 232, 0.92);
+    padding: 2.6rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 18px 40px rgba(31, 42, 51, 0.28);
+    width: 100%;
+    max-width: 520px;
+    animation: fadeSlide 0.9s ease-out;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(111, 156, 149, 0.25);
+}
+
+.container:hover {
+    transform: translateY(-3px);
+}
+
+/* ===== Logo superior ===== */
+.login-logo {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-logo img {
+    width: 180px;
+    height: auto;
+    border-radius: 20px;
+    mix-blend-mode: multiply; /* ðŸ”¹ Elimina fondo blanco del logo */
+    transition: all 0.4s ease;
+}
+
+.login-logo img:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+.password-group {
+    position: relative;
+}
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%; /* Esto asegura el mismo tamaÃ±o que el resto */
+}
+
+.password-wrapper input {
+    width: 700px; /* Hace el input igual de ancho que el de email */
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    opacity: 0.7;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.toggle-password:hover {
+    opacity: 1;
+}
+
+.toggle-password:hover {
+    opacity: 1;
+}
+
+/* ===== TÃ­tulo ===== */
+.container h2 {
+    text-align: center;
+    color: #29435a;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 1px;
+}
+
+/* ===== Texto de bienvenida ===== */
+.welcome-text {
+    text-align: center;
+    color: #6f9c95;
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.8s ease;
+}
+
+/* ===== Etiquetas e inputs ===== */
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid #cfe0d6;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: rgba(243, 239, 232, 0.92);
+    font-size: 0.9rem;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    border-color: #6f9c95;
+    background-color: rgba(243, 239, 232, 0.92);
+    box-shadow: 0 0 8px rgba(111, 156, 149, 0.3);
+}
+
+/* ===== Input group (password eye) ===== */
+.input-group {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.input-group .form-control {
+    width: 100%;
+    padding-right: 2.6rem;
+    border-radius: 10px;
+}
+
+.input-group-text {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #f3efe8;
+    border: 1px solid #cfe0d6;
+    padding: 4px 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+}
+
+/* Evita que el icono expanda el ancho del grid */
+.input-group {
+    overflow: hidden;
+}
+
+.input-group-text:hover {
+    background: #f3efe8;
+}
+
+.input-group-text i {
+    color: #1f2a33;
+}
+
+.password-hint {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(243, 239, 232, 0.92);
+    border: 1px solid #cfe0d6;
+    color: #1f2a33;
+    font-size: 0.85rem;
+}
+
+.password-hint ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+}
+
+.password-hint li {
+    margin-bottom: 4px;
+}
+
+.password-hint li.valid {
+    color: #06301e;
+    font-weight: 600;
+}
+
+/* ===== Espaciado entre campos ===== */
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+/* ===== BotÃ³n principal ===== */
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #6f9c95, #29435a);
+    color: white;
+    border: none;
+    padding: 0.9rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.8rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 18px rgba(41, 67, 90, 0.25);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, rgba(41, 67, 90, 0.75), rgba(111, 156, 149, 0.65)), url("../images/fondo.jpg");
+    transform: scale(1.03);
+    box-shadow: 0 10px 22px rgba(41, 67, 90, 0.35);
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+}
+
+/* ===== Enlace al registro ===== */
+.text-center {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.text-center a {
+    color: #29435a;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.text-center a:hover {
+    color: #1f2a33;
+    text-decoration: underline;
+}
+
+
+/* ===== Mensajes de error ===== */
+.alert {
+    background-color: rgba(243, 239, 232, 0.92);
+    color: #b00000;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ffb2b2;
+    font-size: 0.9rem;
+    animation: fadeIn 0.6s ease;
+}
+
+.alert-success {
+    background-color: rgba(207, 224, 214, 0.85);
+    color: #1f4d3a;
+    border: 1px solid #9fc7b6;
+}
+
+.alert-danger {
+    background-color: rgba(255, 230, 230, 0.9);
+    color: #b00000;
+    border: 1px solid #ffb2b2;
+}
+
+/* ===== Animaciones ===== */
+@keyframes fadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+form .mb-3 {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+form .mb-3:nth-child(1) { animation-delay: 0.1s; }
+form .mb-3:nth-child(2) { animation-delay: 0.2s; }
+form .mb-3:nth-child(3) { animation-delay: 0.3s; }
+form .mb-3:nth-child(4) { animation-delay: 0.4s; }
+form .mb-3:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Responsivo ===== */
+@media (max-width: 480px) {
+    .container {
+        padding: 2rem;
+        max-width: 90%;
+    }
+
+    .container h2 {
+        font-size: 1.7rem;
+    }
+
+    .welcome-text {
+        font-size: 1rem;
+    }
+
+    .login-logo img {
+        width: 140px;
+    }
+}
+
+
+
+
+

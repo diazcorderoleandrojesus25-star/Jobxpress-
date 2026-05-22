@@ -1,0 +1,173 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Agenda - JobXpress</title>
+
+    <link rel="stylesheet" href="{% static 'css/styleagenda.css' %}">
+    <link rel="stylesheet" href="{% static 'css/prestador.css' %}">
+    <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="prestador-modern">
+
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+    <nav class="nav-links">
+        <a href="/prestador/home">Inicio</a>
+        <a href="/prestador/servicioPrestador">Tu servicio</a>
+        <a href="/prestador/perfil">Tu Perfil</a>
+        <a href="/prestador/ganancias">Tus ganancias</a>
+        <a href="/prestador/valoraciones">Tus valoraciones</a>
+        <a href="/prestador/agenda" class="activo">Mi agenda</a>
+        <a href="/prestador/dashboard">Dashboard</a>
+
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            Cerrar sesion
+        </a>
+
+        <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="contenedor-principal">
+
+    <section class="intro">
+        <h1>Tu Agenda</h1>
+        <p>Consulta tus citas y administra tus solicitudes.</p>
+    </section>
+
+    <section class="agenda-layout">
+        <div class="calendar-card">
+            <h2>Calendario</h2>
+            <div id="calendarioFull"></div>
+        </div>
+
+        <div class="eventos-card">
+            <h2>Solicitudes Pendientes</h2>
+            <div id="listaSolicitudes"></div>
+
+            <h2 style="margin-top: 35px;">Servicios Pendientes</h2>
+            <div id="listaServiciosPendientes"></div>
+        </div>
+    </section>
+</main>
+
+<script>
+let calendar;
+
+async function fetchAgenda() {
+    const resp = await fetch('/prestador/agenda/data');
+    return await resp.json();
+}
+
+function renderSolicitudes(lista) {
+    const cont = document.getElementById('listaSolicitudes');
+    cont.innerHTML = '';
+    if (!lista.length) {
+        cont.innerHTML = '<div class="pm-empty"><span>📥</span>No tienes solicitudes pendientes.</div>';
+        return;
+    }
+
+    lista.forEach(s => {
+        const card = document.createElement('div');
+        card.classList.add('tarjeta-servicio');
+        card.innerHTML = `
+            <h3>${s.servicio}</h3>
+            <p><strong>Cliente:</strong> ${s.cliente}</p>
+            <p><strong>Fecha:</strong> ${s.fecha || ''} ${s.hora || ''}</p>
+            <p><strong>Ubicacion:</strong> ${s.direccion || '-'}</p>
+            <button class="btn-aceptar" onclick="aceptar(${s.id})">Aceptar</button>
+            <button class="btn-rechazar" onclick="rechazar(${s.id})">Rechazar</button>
+        `;
+        cont.appendChild(card);
+    });
+}
+
+function renderAceptadas(lista) {
+    const cont = document.getElementById('listaServiciosPendientes');
+    cont.innerHTML = '';
+    if (!lista.length) {
+        cont.innerHTML = '<div class="pm-empty"><span>✅</span>No tienes servicios confirmados.</div>';
+        return;
+    }
+
+    lista.forEach(s => {
+        const card = document.createElement('div');
+        card.classList.add('tarjeta-servicio');
+        card.innerHTML = `
+            <h3>${s.servicio}</h3>
+            <p><strong>Cliente:</strong> ${s.cliente}</p>
+            <p><strong>Fecha:</strong> ${s.fecha || ''} ${s.hora || ''}</p>
+            <p><strong>Ubicacion:</strong> ${s.direccion || '-'}</p>
+            <button class="btn-aceptar" onclick="verDetalles(${s.id})">Ver detalles</button>
+        `;
+        cont.appendChild(card);
+    });
+}
+
+function renderCalendario(eventos) {
+    const calendarEl = document.getElementById('calendarioFull');
+    calendarEl.innerHTML = '';
+
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        height: 500,
+        events: eventos,
+        headerToolbar: {
+            left: 'title',
+            right: ''
+        }
+    });
+    calendar.render();
+}
+
+async function cargarTodo() {
+    const data = await fetchAgenda();
+    renderSolicitudes(data.pendientes || []);
+    renderAceptadas(data.aceptadas || []);
+    renderCalendario(data.eventos || []);
+}
+
+async function aceptar(id) {
+    await fetch(`/prestador/agenda/aceptar/${id}`, { method: 'POST' });
+    Swal.fire('Solicitud aceptada', '', 'success');
+    cargarTodo();
+}
+
+async function rechazar(id) {
+    await fetch(`/prestador/agenda/rechazar/${id}`, { method: 'POST' });
+    Swal.fire('Solicitud rechazada', '', 'error');
+    cargarTodo();
+}
+
+async function verDetalles(id) {
+    const data = await fetchAgenda();
+    const s = (data.aceptadas || []).find(x => x.id === id);
+    if (!s) return;
+    Swal.fire({
+        title: s.servicio,
+        html: `
+            <p><strong>Cliente:</strong> ${s.cliente}</p>
+            <p><strong>Fecha:</strong> ${s.fecha || ''} ${s.hora || ''}</p>
+            <p><strong>Ubicacion:</strong> ${s.direccion || '-'}</p>
+            <p><strong>Monto:</strong> ${s.monto || '-'}</p>
+            <p><strong>Detalles:</strong><br>${s.descripcion || '-'}</p>
+        `,
+        icon: 'info',
+        confirmButtonText: 'Cerrar'
+    });
+}
+
+cargarTodo();
+</script>
+
+</body>
+</html>

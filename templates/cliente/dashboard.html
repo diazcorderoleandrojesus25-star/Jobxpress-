@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styledashcli.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cliente.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <title>Dashboard</title>
+</head>
+<body class="cliente-layout-page cliente-dashboard-page">
+
+<header class="navbar">
+   <div class="logo">
+        <img class="logo-full" src="{% static 'images/logo_sidebar_blue.png' %}" alt="JobXpress">
+    </div>
+    <nav class="nav-links">
+        <a href="/cliente/home">Inicio</a>
+        <a href="/cliente/historial">Historial Contrataciones</a>
+        <a href="/cliente/perfil">Tu perfil</a>
+        <a href="/cliente/dashboard" class="active">Dashboard</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesión</a>
+        <form id="logout-form" action="/logout" method="post" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="main-content">
+
+    <header class="dashboard-header">
+        <div class="header-left">
+            <span class="dashboard-eyebrow">Panel del cliente</span>
+            <h1>Tu actividad en JobXpress</h1>
+            <p>Una vista clara de tus contrataciones, el ritmo de gasto y los servicios que más usas.</p>
+            <div class="hero-chips">
+                <span class="hero-chip">Pendientes: {{ pendientes }}</span>
+                <span class="hero-chip">En proceso: {{ en_proceso }}</span>
+                <span class="hero-chip">Prestadores distintos: {{ prestadores_distintos }}</span>
+            </div>
+        </div>
+        <div class="hero-panel">
+            <span class="hero-panel-label">Panorama actual</span>
+            <strong>{{ total_contrataciones }}</strong>
+            <p>contrataciones registradas</p>
+            <a class="btn-primary hero-panel-action" href="/cliente/historial">Ir al historial</a>
+        </div>
+    </header>
+
+    <section class="summary-cards">
+        <article class="card stat-card stat-card-primary">
+            <div class="card-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 19c2-3.5 5-5 8-5s6 1.5 8 5"></path>
+                    <circle cx="12" cy="8" r="4"></circle>
+                </svg>
+            </div>
+            <div class="card-info">
+                <h3>Contrataciones Totales</h3>
+                <p class="number">{{ total_contrataciones }}</p>
+                <p class="trend positive">{{ servicios_distintos }} servicios distintos</p>
+            </div>
+            <span class="card-accent">Red activa</span>
+        </article>
+
+        <article class="card stat-card stat-card-warm">
+            <div class="card-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 7 9 18l-5-5"></path>
+                </svg>
+            </div>
+            <div class="card-info">
+                <h3>Completadas</h3>
+                <p class="number">{{ completadas }}</p>
+                <p class="trend positive">{{ en_proceso }} siguen en proceso</p>
+            </div>
+            <span class="card-accent">Buen ritmo</span>
+        </article>
+
+        <article class="card stat-card stat-card-soft">
+            <div class="card-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </div>
+            <div class="card-info">
+                <h3>Canceladas</h3>
+                <p class="number">{{ canceladas }}</p>
+                <p class="trend negative">{{ pendientes }} pendientes</p>
+            </div>
+            <span class="card-accent">Seguimiento</span>
+        </article>
+    </section>
+
+    <section class="recent-section">
+        <div class="recent-header">
+            <div>
+                <span class="section-kicker">Reciente</span>
+                <h2>Contrataciones recientes</h2>
+            </div>
+            <a class="btn-primary" href="/cliente/historial">Ver historial</a>
+        </div>
+        <div class="recent-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Prestador</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if recientes %}
+                    {% for c in recientes %}
+                    <tr>
+                        <td>{% if c.servicio %}{{ c.servicio.nombre }}{% else %}-{% endif %}</td>
+                        <td>
+                            {% if c.prestador and c.prestador.usuario %}
+                                {{ c.prestador.usuario.nombre }} {{ c.prestador.usuario.apellido }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge {% if c.estado|lower == 'pendiente' %}status-pending{% elif 'complet' in c.estado|lower %}status-done{% elif 'cancel' in c.estado|lower %}status-cancelled{% elif 'proceso' in c.estado|lower or 'activo' in c.estado|lower or 'confirm' in c.estado|lower %}status-progress{% else %}status-neutral{% endif %}">
+                                {{ c.estado }}
+                            </span>
+                        </td>
+                        <td>{% if c.fecha %}{{ c.fecha }}{% elif c.fecha_solicitud %}{{ c.fecha_solicitud }}{% else %}-{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="4" class="empty">No tienes contrataciones aun.</td></tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="charts-container">
+        <div class="chart-wrapper">
+            <h2>Estado de contrataciones</h2>
+            <p class="chart-copy">El balance visual de tus solicitudes activas, completadas y canceladas.</p>
+            <canvas id="usersChart" class="dashboard-chart"></canvas>
+        </div>
+
+        <div class="chart-wrapper">
+            <h2>Gasto mensual (COP)</h2>
+            <p class="chart-copy">Una curva limpia para revisar como se ha movido tu inversion reciente.</p>
+            <canvas id="salesChart" class="dashboard-chart"></canvas>
+        </div>
+
+        <div class="chart-wrapper">
+            <h2>Top servicios solicitados</h2>
+            <p class="chart-copy">Los servicios que mas has pedido, con una lectura rapida y ordenada.</p>
+            <canvas id="topServicesChart" class="dashboard-chart"></canvas>
+        </div>
+    </section>
+
+</main>
+
+{{ estado_labels|json_script:"estado_labels" }}
+{{ estado_values|json_script:"estado_values" }}
+{{ gasto_labels|json_script:"gasto_labels" }}
+{{ gasto_values|json_script:"gasto_values" }}
+{{ top_serv_labels|json_script:"top_serv_labels" }}
+{{ top_serv_values|json_script:"top_serv_values" }}
+
+<script>
+    const estadoLabels = JSON.parse(document.getElementById("estado_labels").textContent || "[]");
+    const estadoValues = JSON.parse(document.getElementById("estado_values").textContent || "[]");
+    const gastoLabels = JSON.parse(document.getElementById("gasto_labels").textContent || "[]");
+    const gastoValues = JSON.parse(document.getElementById("gasto_values").textContent || "[]");
+    const topServLabels = JSON.parse(document.getElementById("top_serv_labels").textContent || "[]");
+    const topServValues = JSON.parse(document.getElementById("top_serv_values").textContent || "[]");
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const ink = rootStyles.getPropertyValue("--ink").trim() || "#1f2933";
+    const muted = rootStyles.getPropertyValue("--muted").trim() || "#52606d";
+    const currency = new Intl.NumberFormat("es-CO");
+    const chartPalette = [
+        "#4f677a",
+        "#6f9c95",
+        "#d8b36a",
+        "#9b8bb3",
+        "#d97a6c",
+        "#7ca6c2"
+    ];
+
+    Chart.defaults.font.family = "'Sora', 'Segoe UI', sans-serif";
+    Chart.defaults.color = muted;
+
+    const doughnutCtx = document.getElementById("usersChart").getContext("2d");
+    const lineCtx = document.getElementById("salesChart").getContext("2d");
+    const topCtx = document.getElementById("topServicesChart").getContext("2d");
+
+    const doughnutPalette = [
+        chartPalette[2],
+        chartPalette[5],
+        chartPalette[1],
+        chartPalette[4],
+        chartPalette[3]
+    ];
+
+    const centerTextPlugin = {
+        id: "centerTextPlugin",
+        afterDraw(chart, args, pluginOptions) {
+            if (chart.config.type !== "doughnut") return;
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data || !meta.data.length) return;
+            const x = meta.data[0].x;
+            const y = meta.data[0].y;
+            ctx.save();
+            ctx.textAlign = "center";
+            ctx.fillStyle = ink;
+            ctx.font = "700 28px Sora";
+            ctx.fillText(pluginOptions.value || "0", x, y - 4);
+            ctx.fillStyle = muted;
+            ctx.font = "500 12px Sora";
+            ctx.fillText(pluginOptions.label || "", x, y + 18);
+            ctx.restore();
+        }
+    };
+
+    Chart.register(centerTextPlugin);
+
+    new Chart(doughnutCtx, {
+        type: "doughnut",
+        data: {
+            labels: estadoLabels.length ? estadoLabels : ["Sin datos"],
+            datasets: [{
+                data: estadoValues.length ? estadoValues : [1],
+                backgroundColor: doughnutPalette,
+                borderWidth: 3,
+                borderColor: "#FFFFFF",
+                hoverOffset: 8,
+                radius: "86%"
+            }]
+        },
+        options: {
+            cutout: "68%",
+            maintainAspectRatio: false,
+            layout: {
+                padding: { top: 4, bottom: 0, left: 0, right: 0 }
+            },
+            plugins: {
+                centerTextPlugin: {
+                    value: String(estadoValues.reduce((acc, value) => acc + value, 0)),
+                    label: "solicitudes"
+                },
+                legend: {
+                    position: "bottom",
+                    labels: { boxWidth: 12, color: muted, font: { size: 12 }, usePointStyle: true, pointStyle: "circle", padding: 16 }
+                },
+                tooltip: {
+                    backgroundColor: ink,
+                    titleColor: "#fff",
+                    bodyColor: "#f7fafc",
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((acc, value) => acc + value, 0) || 1;
+                            const value = context.parsed || 0;
+                            const percent = Math.round((value / total) * 100);
+                            return `${context.label}: ${value} (${percent}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const gradient = lineCtx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, "rgba(111, 156, 149, 0.28)");
+    gradient.addColorStop(0.55, "rgba(111, 156, 149, 0.12)");
+    gradient.addColorStop(1, "rgba(111, 156, 149, 0.03)");
+
+    new Chart(lineCtx, {
+        type: "line",
+        data: {
+            labels: gastoLabels.length ? gastoLabels : ["Sin datos"],
+            datasets: [{
+                label: "Gasto mensual (COP)",
+                data: gastoValues.length ? gastoValues : [0],
+                backgroundColor: gradient,
+                borderColor: chartPalette[1],
+                borderWidth: 2,
+                fill: true,
+                tension: 0.42,
+                pointRadius: 4,
+                pointBackgroundColor: chartPalette[1],
+                pointBorderColor: "#fff",
+                pointHoverRadius: 6,
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            layout: {
+                padding: { top: 4, bottom: 0, left: 0, right: 0 }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: "rgba(41,67,90,0.08)" },
+                    ticks: {
+                        color: muted,
+                        callback: function(value) {
+                            return "$" + currency.format(value);
+                        }
+                    }
+                },
+                x: { grid: { display: false }, ticks: { color: muted } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: ink,
+                    titleColor: "#fff",
+                    bodyColor: "#f7fafc",
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            return "Gasto: $" + currency.format(context.parsed.y || 0) + " COP";
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const topGradient = topCtx.createLinearGradient(0, 0, 340, 0);
+    topGradient.addColorStop(0, "rgba(228, 124, 124, 0.98)");
+    topGradient.addColorStop(1, "rgba(201, 88, 88, 0.98)");
+
+    new Chart(topCtx, {
+        type: "bar",
+        data: {
+            labels: topServLabels.length ? topServLabels : ["Sin datos"],
+            datasets: [{
+                label: "Solicitudes",
+                data: topServValues.length ? topServValues : [0],
+                backgroundColor: topGradient,
+                borderRadius: 8,
+                borderSkipped: false,
+                maxBarThickness: 32
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            maintainAspectRatio: false,
+            layout: {
+                padding: { top: 4, bottom: 0, left: 0, right: 0 }
+            },
+            scales: {
+                x: { beginAtZero: true, grid: { color: "rgba(41,67,90,0.08)" }, ticks: { color: muted, precision: 0 } },
+                y: { grid: { display: false }, ticks: { color: muted } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: ink,
+                    titleColor: "#fff",
+                    bodyColor: "#f7fafc",
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            return "Solicitudes: " + (context.parsed.x || 0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

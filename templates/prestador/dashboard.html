@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - JobXpress</title>
+  <link rel="stylesheet" href="{% static 'css/styledashprestador.css' %}">
+  <link rel="stylesheet" href="{% static 'css/prestador.css' %}">
+  <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="prestador-modern">
+
+<header class="navbar">
+  <div class="logo">JobXpress</div>
+
+  <nav class="nav-links">
+      <a href="/prestador/home">Inicio</a>
+      <a href="/prestador/servicioPrestador">Tu servicio</a>
+      <a href="/prestador/perfil">Tu Perfil</a>
+      <a href="/prestador/ganancias">Tus ganancias</a>
+      <a href="/prestador/valoraciones">Tus valoraciones</a>
+      <a href="/prestador/agenda">Mi agenda</a>
+      <a href="/prestador/dashboard" class="activo">Dashboard</a>
+
+      <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+          Cerrar sesion
+      </a>
+      <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+  </nav>
+</header>
+
+<main class="dashboard-container">
+
+  <section class="bienvenida">
+    <h1>
+      Hola, <span>{{ usuario.nombre|default:"Prestador" }}</span>
+    </h1>
+    <p>Resumen real de tu actividad y estado de solicitudes.</p>
+  </section>
+
+  <section class="resumen-grid">
+      <div class="resumen-card">
+          <h3>Servicios activos</h3>
+          <p class="dato">{{ servicios_activos }} servicios publicados</p>
+      </div>
+
+      <div class="resumen-card">
+          <h3>Ganancias (total)</h3>
+          <p class="dato">$ {{ ganancias }} COP</p>
+      </div>
+
+      <div class="resumen-card">
+          <h3>Resenas promedio</h3>
+          <p class="dato">{{ promedio }} ★</p>
+      </div>
+
+      <div class="resumen-card">
+          <h3>Solicitudes</h3>
+          <p class="dato">{{ total_contrataciones }} totales</p>
+      </div>
+  </section>
+
+  <section class="graficos-grid">
+      <div class="grafico-card">
+          <h2>Estado de solicitudes</h2>
+          <p class="chart-note">Visualiza en un vistazo como se reparte tu carga de trabajo actual.</p>
+          <div class="chart-shell chart-shell-donut">
+              <canvas id="prestadorEstadosChart" class="dashboard-chart"></canvas>
+          </div>
+          <div class="kpi-list compact">
+              <div class="kpi"><span>Pendientes</span><strong>{{ pendientes }}</strong></div>
+              <div class="kpi"><span>Confirmadas</span><strong>{{ confirmadas }}</strong></div>
+              <div class="kpi"><span>Completadas</span><strong>{{ completadas }}</strong></div>
+              <div class="kpi"><span>Canceladas</span><strong>{{ canceladas }}</strong></div>
+          </div>
+      </div>
+
+      <div class="grafico-card">
+          <h2>Resumen de resenas</h2>
+          <p class="chart-note">Tus valoraciones reflejadas con una paleta suave y contrastada.</p>
+          <div class="chart-shell chart-shell-bars">
+              <canvas id="prestadorResenasChart" class="dashboard-chart"></canvas>
+          </div>
+          <div class="rating-summary">
+              <span class="pm-pill">Promedio {{ promedio }} ★</span>
+              <span class="pm-pill">{{ total_califs }} resenas</span>
+          </div>
+      </div>
+  </section>
+
+  <section class="comentarios-recientes">
+      <h2>Ultimas resenas</h2>
+      {% if ultimas %}
+        {% for r in ultimas %}
+        <div class="comentario">
+            <p><strong>{{ r.cliente }}</strong> — "{{ r.comentario }}"</p>
+            <span>{{ r.puntuacion }} ★</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="pm-empty"><span>💬</span>No tienes resenas aun.</div>
+      {% endif %}
+  </section>
+
+  <section class="agenda-proxima">
+      <h2>Proximas citas</h2>
+      <ul class="lista-citas">
+          {% if proximas %}
+            {% for c in proximas %}
+            <li><strong>{{ c.fecha }}</strong> — {{ c.servicio.nombre|default:"Servicio" }}</li>
+            {% endfor %}
+          {% else %}
+            <li class="pm-empty"><span>📅</span>No tienes citas programadas.</li>
+          {% endif %}
+      </ul>
+  </section>
+
+  <section class="notificaciones">
+      <h2>Consejos</h2>
+      <ul>
+          <li>Responde rapido las solicitudes para mejorar tu posicion.</li>
+          <li>Actualiza tu perfil para recibir mas clientes.</li>
+          <li>Ofrece precios competitivos en dias con baja demanda.</li>
+      </ul>
+  </section>
+
+</main>
+
+{{ pendientes|json_script:"prestador_pendientes" }}
+{{ confirmadas|json_script:"prestador_confirmadas" }}
+{{ completadas|json_script:"prestador_completadas" }}
+{{ canceladas|json_script:"prestador_canceladas" }}
+{{ dist5|json_script:"prestador_dist5" }}
+{{ dist4|json_script:"prestador_dist4" }}
+{{ dist3|json_script:"prestador_dist3" }}
+{{ dist2|json_script:"prestador_dist2" }}
+{{ dist1|json_script:"prestador_dist1" }}
+{{ promedio|json_script:"prestador_promedio" }}
+{{ total_califs|json_script:"prestador_total_califs" }}
+
+<script>
+  const pendientes = JSON.parse(document.getElementById("prestador_pendientes").textContent || "0");
+  const confirmadas = JSON.parse(document.getElementById("prestador_confirmadas").textContent || "0");
+  const completadas = JSON.parse(document.getElementById("prestador_completadas").textContent || "0");
+  const canceladas = JSON.parse(document.getElementById("prestador_canceladas").textContent || "0");
+  const dist5 = JSON.parse(document.getElementById("prestador_dist5").textContent || "0");
+  const dist4 = JSON.parse(document.getElementById("prestador_dist4").textContent || "0");
+  const dist3 = JSON.parse(document.getElementById("prestador_dist3").textContent || "0");
+  const dist2 = JSON.parse(document.getElementById("prestador_dist2").textContent || "0");
+  const dist1 = JSON.parse(document.getElementById("prestador_dist1").textContent || "0");
+  const promedio = JSON.parse(document.getElementById("prestador_promedio").textContent || "0");
+  const totalCalifs = JSON.parse(document.getElementById("prestador_total_califs").textContent || "0");
+
+  const prestadorStyles = getComputedStyle(document.documentElement);
+  const pmDeep = prestadorStyles.getPropertyValue("--pm-deep").trim() || "#29435a";
+  const pmMid = prestadorStyles.getPropertyValue("--pm-mid").trim() || "#6f9c95";
+  const pmTint = prestadorStyles.getPropertyValue("--pm-tint").trim() || "#cfe0d6";
+  const pmPaper = prestadorStyles.getPropertyValue("--pm-paper").trim() || "#f3efe8";
+  const pmInk = prestadorStyles.getPropertyValue("--pm-ink").trim() || "#1f2a33";
+  const grid = "rgba(41, 67, 90, 0.10)";
+
+  Chart.defaults.font.family = "'Sora', 'Segoe UI', sans-serif";
+  Chart.defaults.color = "#52606d";
+
+  const estadosCtx = document.getElementById("prestadorEstadosChart").getContext("2d");
+  const estadoGradient = estadosCtx.createLinearGradient(0, 0, 0, 260);
+  estadoGradient.addColorStop(0, "rgba(111, 156, 149, 0.95)");
+  estadoGradient.addColorStop(1, "rgba(41, 67, 90, 0.78)");
+
+  new Chart(estadosCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Pendientes", "Confirmadas", "Completadas", "Canceladas"],
+      datasets: [{
+        data: [pendientes, confirmadas, completadas, canceladas],
+        backgroundColor: [pmMid, pmDeep, "#d8b36a", "#d97a6c"],
+        borderColor: pmPaper,
+        borderWidth: 4,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      cutout: "66%",
+      radius: "82%",
+      layout: {
+        padding: {
+          top: 6,
+          right: 8,
+          bottom: 6,
+          left: 8
+        }
+      },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            pointStyle: "circle",
+            boxWidth: 10,
+            padding: 18
+          }
+        },
+        tooltip: {
+          backgroundColor: pmInk,
+          titleColor: "#fff",
+          bodyColor: "#f8fafc",
+          padding: 12
+        }
+      }
+    }
+  });
+
+  const resenasCtx = document.getElementById("prestadorResenasChart").getContext("2d");
+  const barGradient = resenasCtx.createLinearGradient(0, 0, 340, 0);
+  barGradient.addColorStop(0, "rgba(111, 156, 149, 0.95)");
+  barGradient.addColorStop(1, "rgba(41, 67, 90, 0.95)");
+
+  new Chart(resenasCtx, {
+    type: "bar",
+    data: {
+      labels: ["5 estrellas", "4 estrellas", "3 estrellas", "2 estrellas", "1 estrella"],
+      datasets: [{
+        label: "Resenas",
+        data: [dist5, dist4, dist3, dist2, dist1],
+        backgroundColor: barGradient,
+        borderRadius: 12,
+        borderSkipped: false,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      indexAxis: "y",
+      layout: {
+        padding: {
+          top: 6,
+          right: 8,
+          bottom: 0,
+          left: 4
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: grid },
+          ticks: {
+            color: "#52606d",
+            precision: 0
+          }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: pmDeep }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: pmInk,
+          titleColor: "#fff",
+          bodyColor: "#f8fafc",
+          padding: 12,
+          callbacks: {
+            afterLabel: function(context) {
+              if (!totalCalifs) return "Sin calificaciones";
+              const pct = Math.round((context.parsed.x / totalCalifs) * 100);
+              return pct + "% del total";
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

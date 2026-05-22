@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicio no disponible | JobXpress</title>
+    <link rel="stylesheet" href="{% static 'css/cliente.css' %}">
+    <style>
+        .no-servicio {
+            max-width: 680px;
+            margin: 60px auto;
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .no-servicio h1 {
+            color: #0277BD;
+            margin-bottom: 10px;
+        }
+        .no-servicio p {
+            color: #5b6b83;
+            margin-bottom: 18px;
+        }
+        .no-servicio a {
+            display: inline-block;
+            background: #2d6cdf;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .no-servicio a:hover {
+            background: #244fb3;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-servicio">
+        <h1>Servicio no disponible</h1>
+        <p>Este servicio está desactivado o no existe en este momento.</p>
+        <a href="/cliente/home">Volver al inicio</a>
+    </div>
+</body>
+</html>

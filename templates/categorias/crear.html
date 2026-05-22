@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Crear Categoria - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-modern.css' %}">
+</head>
+<body class="admin-modern">
+
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+    <nav class="nav-links">
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/usuarios/lista">Usuarios</a>
+        <a href="/admin/roles/lista">Roles</a>
+        <a href="/admin/servicios/lista">Servicios</a>
+        <a href="/admin/categorias/lista" class="active">Categorias</a>
+        <a href="/admin/metodos_pago/lista">Metodos de Pago</a>
+        <a href="/admin/contrataciones">Contrataciones</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
+        <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="admin-shell">
+    <section class="admin-hero admin-hero-grid">
+        <p class="pm-eyebrow">Nueva categoria</p>
+        <h1>Crear categoria</h1>
+        <p>Agrega una nueva categoria para clasificar mejor los servicios.</p>
+    </section>
+
+    <section class="admin-form-card">
+        <form action="/admin/categorias/crear" method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" name="nombre" required>
+            </div>
+            <div class="col-12 admin-inline-actions">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <a href="/admin/categorias/lista" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valoraciones - JobXpress</title>
+
+  <link rel="stylesheet" href="{% static 'css/prestador.css' %}">
+  <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+</head>
+
+<body class="prestador-modern">
+
+<header class="navbar">
+  <div class="logo">JobXpress</div>
+
+  <nav class="nav-links">
+      <a href="/prestador/home">Inicio</a>
+      <a href="/prestador/servicioPrestador">Tu servicio</a>
+      <a href="/prestador/perfil">Tu Perfil</a>
+      <a href="/prestador/ganancias">Tus ganancias</a>
+      <a href="/prestador/valoraciones" class="activo">Tus valoraciones</a>
+      <a href="/prestador/agenda">Mi agenda</a>
+      <a href="/prestador/dashboard">Dashboard</a>
+
+      <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+          Cerrar sesion
+      </a>
+      <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+  </nav>
+</header>
+
+<main class="pm-shell">
+  <section class="pm-hero">
+    <p class="pm-eyebrow">Reputacion</p>
+    <h1>Tus valoraciones</h1>
+    <p>Conoce tu promedio, el rendimiento por estrellas y los comentarios mas recientes.</p>
+  </section>
+
+  <section class="pm-grid pm-grid-3">
+    <article class="pm-card">
+      <div class="pm-card-icon">&#9733;</div>
+      <h3>Promedio</h3>
+      <div class="pm-stat">{{ promedio }} / 5</div>
+    </article>
+    <article class="pm-card">
+      <div class="pm-card-icon">&#10003;</div>
+      <h3>Servicios completados</h3>
+      <div class="pm-stat">{{ completados }}</div>
+    </article>
+    <article class="pm-card">
+      <div class="pm-card-icon">&#128172;</div>
+      <h3>Resenas recibidas</h3>
+      <div class="pm-stat">{{ total }}</div>
+    </article>
+  </section>
+
+  <section class="pm-section">
+    <h2>Distribucion por estrellas</h2>
+    <div class="pm-grid">
+      <div class="pm-card">
+        <div class="pm-list">
+          <div>
+            <strong>5 estrellas</strong>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width: {{ dist5_pct|default:0 }}%;"></div></div>
+            <span>{{ dist5|default:0 }}</span>
+          </div>
+          <div>
+            <strong>4 estrellas</strong>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width: {{ dist4_pct|default:0 }}%;"></div></div>
+            <span>{{ dist4|default:0 }}</span>
+          </div>
+          <div>
+            <strong>3 estrellas</strong>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width: {{ dist3_pct|default:0 }}%;"></div></div>
+            <span>{{ dist3|default:0 }}</span>
+          </div>
+          <div>
+            <strong>2 estrellas</strong>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width: {{ dist2_pct|default:0 }}%;"></div></div>
+            <span>{{ dist2|default:0 }}</span>
+          </div>
+          <div>
+            <strong>1 estrella</strong>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width: {{ dist1_pct|default:0 }}%;"></div></div>
+            <span>{{ dist1|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pm-section">
+    <h2>Ultimos comentarios</h2>
+    <div class="pm-grid">
+      {% if calificaciones %}
+        {% for c in calificaciones %}
+          <div class="pm-review">
+            <div class="pm-review-head">
+              <strong>{{ c.cliente }}</strong>
+              <span class="pm-review-stars">
+                {% for i in "12345"|make_list %}
+                  {% if forloop.counter <= c.puntuacion %}&#9733;{% else %}&#9734;{% endif %}
+                {% endfor %}
+              </span>
+            </div>
+            <small>{{ c.fecha }}</small>
+            <p>{{ c.comentario }}</p>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="pm-empty"><span>💬</span>Aun no tienes comentarios.</div>
+      {% endif %}
+    </div>
+  </section>
+</main>
+
+</body>
+</html>

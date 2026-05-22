@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'css/cliente.css' %}" rel="stylesheet">
+    <title>JobXpress</title>
+
+    
+    <script>
+        
+        if (performance.navigation.type === 2) {
+            window.location.replace("/login");
+        }
+
+        
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted) {
+                window.location.replace("/login");
+            }
+        });
+    </script>
+
+</head>
+
+<body class="cliente-layout-page cliente-home-page">
+
+<header class="navbar">
+    <div class="logo">
+        <img class="logo-full" src="{% static 'images/logo_sidebar_blue.png' %}" alt="JobXpress">
+    </div>
+
+    <nav class="nav-links">
+        <a href="/cliente/home" class="active">Inicio</a>
+        <a href="/cliente/historial">Historial Contrataciones</a>
+        <a href="/cliente/perfil">Tu perfil</a>
+        <a href="/cliente/dashboard">Dashboard</a>
+
+        <!-- Cerrar sesión -->
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            Cerrar sesión
+        </a>
+
+        <!-- FORMULARIO DE LOGOUT -->
+        <form id="logout-form" action="/logout" method="post" style="display:none;"></form>
+    </nav>
+</header>
+
+<main class="cliente-home-main">
+
+    <section id="inicio">
+        <h1>Servicios que ofrecemos</h1>
+        <p>
+            En JobXpress ofrecemos una amplia gama de servicios diseñados para cubrir las necesidades cotidianas de nuestros usuarios...
+        </p>
+    </section>
+
+    <section id="servicios">
+        <form class="filtros-servicios" method="get" action="/cliente/home">
+            <select name="categoria" class="form-control" style="max-width:240px;">
+                <option value="">Todas las categorías</option>
+                {% for c in categorias %}
+                <option value="{{ c.id_categoria }}" {% if filtroCategoria|stringformat:"s" == c.id_categoria|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary">Filtrar</button>
+            <a href="/cliente/home" class="btn-secondary">Limpiar</a>
+        </form>
+
+        <div class="tarjetas">
+
+            {% if "plomeria" in active_pages %}
+            <!-- PLOMERÍA -->
+            <div class="tarjeta">
+                <img src="{% static 'images/plomeria.png' %}" alt="plomeria">
+                <a href="/cliente/plomeria"><h3>Plomería</h3></a>
+                <p>Soluciones rápidas para fugas, instalaciones y reparaciones en el hogar.</p>
+            </div>
+            {% endif %}
+
+            {% if "electricidad" in active_pages %}
+            <!-- ELECTRICIDAD -->
+            <div class="tarjeta">
+                <img src="{% static 'images/electricidad.png' %}" alt="electricidad">
+                <a href="/cliente/electricidad"><h3>Electricidad</h3></a>
+                <p>Instalaciones eléctricas, arreglos y mantenimiento con seguridad garantizada.</p>
+            </div>
+            {% endif %}
+
+            {% if "carpinteria" in active_pages %}
+            <!-- CARPINTERÍA -->
+            <div class="tarjeta">
+                <img src="{% static 'images/carpinteria.png' %}" alt="carpinteria">
+                <a href="/cliente/carpinteria"><h3>Carpintería</h3></a>
+                <p>Reparación y fabricación de muebles, puertas, closets y más.</p>
+            </div>
+            {% endif %}
+
+            {% if "limpiezagen" in active_pages %}
+            <!-- LIMPIEZA -->
+            <div class="tarjeta">
+                <img src="{% static 'images/limpieza.png' %}" alt="limpieza">
+                <a href="/cliente/limpiezagen"><h3>Limpieza general</h3></a>
+                <p>Servicio de limpieza residencial o de oficinas.</p>
+            </div>
+            {% endif %}
+
+            {% if "soportetec" in active_pages %}
+            <!-- SOPORTE TÉCNICO -->
+            <div class="tarjeta">
+                <img src="{% static 'images/soporte.png' %}" alt="soporte tecnico">
+                <a href="/cliente/soportetec"><h3>Soporte técnico</h3></a>
+                <p>Revisión y solución de problemas en computadores y celulares.</p>
+            </div>
+            {% endif %}
+
+            {% if "instalacionnequi" in active_pages %}
+            <!-- INSTALACIÓN -->
+            <div class="tarjeta">
+                <img src="{% static 'images/instalacion.png' %}" alt="instalacion">
+                <a href="/cliente/instalacionnequi"><h3>Instalación de equipos</h3></a>
+                <p>Televisores, routers, aires acondicionados, cámaras y más.</p>
+            </div>
+            {% endif %}
+
+            {% if "fisioterapia" in active_pages %}
+            <!-- FISIOTERAPIA -->
+            <div class="tarjeta">
+                <img src="{% static 'images/fisio.png' %}" alt="fisioterapia">
+                <a href="/cliente/fisioterapia"><h3>Fisioterapia</h3></a>
+                <p>Sesiones de rehabilitación física y terapias a domicilio.</p>
+            </div>
+            {% endif %}
+
+            {% if "salud" in active_pages %}
+            <!-- SALUD -->
+            <div class="tarjeta">
+                <img src="{% static 'images/salud.png' %}" alt="salud">
+                <a href="/cliente/salud"><h3>Salud</h3></a>
+                <p>Atención médica básica o especializada.</p>
+            </div>
+            {% endif %}
+
+            {% if "asesorias" in active_pages %}
+            <!-- TUTORES -->
+            <div class="tarjeta">
+                <img src="{% static 'images/tutores.png' %}" alt="tutores">
+                <a href="/cliente/asesorias"><h3>Tutores y asesorías</h3></a>
+                <p>Clases particulares y ayuda escolar.</p>
+            </div>
+            {% endif %}
+
+            {% if "cuidaranimales" in active_pages %}
+            <!-- CUIDADORES -->
+            <div class="tarjeta">
+                <img src="{% static 'images/cuidadores.png' %}" alt="cuidador">
+                <a href="/cliente/cuidaranimales"><h3>Cuidadores de animales</h3></a>
+                <p>Cuidado y paseo para mascotas.</p>
+            </div>
+            {% endif %}
+
+            {% if "redaccion" in active_pages %}
+            <!-- REDACCIÓN -->
+            <div class="tarjeta">
+                <img src="{% static 'images/redaccion.png' %}" alt="redaccion">
+                <a href="/cliente/redaccion"><h3>Redacción de contenido</h3></a>
+                <p>Textos para blogs, páginas web y redes.</p>
+            </div>
+            {% endif %}
+
+            {% if "marketing" in active_pages %}
+            <!-- MARKETING -->
+            <div class="tarjeta">
+                <img src="{% static 'images/marketing.png' %}" alt="marketing">
+                <a href="/cliente/marketing"><h3>Marketing digital</h3></a>
+                <p>Estrategias, redes sociales y posicionamiento web.</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </section>
+
+</main>
+</body>
+</html>
+
+
+
+
+

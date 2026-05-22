@@ -1,0 +1,269 @@
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Sora:wght@400;500;600;700&display=swap");
+
+/* ================= VARIABLES ================= */
+:root {
+    --color1: #f3efe8; /* fondo claro */
+    --color2: #cfe0d6; /* claro con tinta */
+    --color3: #6f9c95; /* acento medio */
+    --color4: #29435a; /* oscuro */
+    --color5: #1f2a33; /* texto */
+    --tint: rgba(111, 156, 149, 0.18);
+    --tint-strong: rgba(41, 67, 90, 0.22);
+    --shadow-soft: 0 18px 40px rgba(35, 34, 38, 0.12);
+    --shadow-card: 0 16px 30px rgba(35, 34, 38, 0.14);
+}
+
+/* ================= RESET ================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Sora", "Segoe UI", Tahoma, sans-serif;
+    background:
+        linear-gradient(135deg, rgba(41, 67, 90, 0.75), rgba(111, 156, 149, 0.65)),
+        url("../images/fondo.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--color5);
+}
+
+/* ================= HEADER ================= */
+header {
+    background-color: rgba(243, 239, 232, 0.92);
+    border-bottom: 1px solid rgba(37, 51, 66, 0.12);
+}
+
+.navbar-brand {
+    color: var(--color4) !important;
+    font-size: 1.65rem;
+    letter-spacing: 0.5px;
+}
+
+.navbar a {
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--color4);
+    border-color: var(--color4);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(35, 34, 38, 0.2);
+    border-radius: 999px;
+    padding: 0.65rem 1.4rem;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background-color: var(--color3);
+    border-color: var(--color3);
+}
+
+.btn-outline-primary {
+    color: var(--color4);
+    border-color: var(--color4);
+    border-radius: 999px;
+    padding: 0.55rem 1.2rem;
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color4);
+    color: white;
+}
+
+/* ================= HERO ================= */
+section.py-5.text-center {
+    background: rgba(243, 239, 232, 0.92);
+    border-bottom: 2px solid var(--color3);
+    position: relative;
+    overflow: hidden;
+}
+
+section.py-5.text-center::before,
+section.py-5.text-center::after {
+    content: "";
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: var(--color2);
+    opacity: 0.8;
+}
+
+section.py-5.text-center::before {
+    top: -150px;
+    left: -120px;
+}
+
+section.py-5.text-center::after {
+    bottom: -170px;
+    right: -120px;
+    background: var(--color4);
+}
+
+section h1 {
+    color: var(--color4);
+    font-family: "Newsreader", "Sora", serif;
+    font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+section p {
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+section.py-5.text-center .btn {
+    padding: 0.9rem 1.9rem;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* ================= COMO FUNCIONA ================= */
+section.bg-light {
+    background: rgba(207, 224, 214, 0.92) !important;
+}
+
+section.bg-light h2 {
+    color: var(--color4);
+    font-family: "Newsreader", "Sora", serif;
+}
+
+section.bg-light h5 {
+    color: var(--color4);
+}
+
+section.bg-light .col-md-4 {
+    background: rgba(243, 239, 232, 0.95);
+    border-radius: 16px;
+    padding: 26px 22px;
+    border: 2px solid var(--color3);
+    box-shadow: var(--shadow-soft);
+}
+
+section.bg-light .col-md-4 h5 {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+/* ================= SERVICIOS ================= */
+#servicios h2 {
+    color: #f3efe8;
+    font-family: "Newsreader", "Sora", serif;
+    text-shadow: 0 2px 10px rgba(31, 42, 51, 0.45);
+}
+
+.tarjetas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 30px;
+}
+
+.tarjeta {
+    background-color: rgba(243, 239, 232, 0.95);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid var(--color3);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tarjeta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(140deg, var(--color2), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tarjeta:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 26px 50px rgba(35, 34, 38, 0.2);
+    border-color: var(--color2);
+}
+
+.tarjeta:hover::before {
+    opacity: 1;
+}
+
+.tarjeta img {
+    width: 80px;
+    height: auto;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 8px 12px rgba(37, 51, 66, 0.18));
+}
+
+.tarjeta h3 {
+    font-size: 1.1rem;
+    color: var(--color4);
+    font-weight: 700;
+}
+
+.tarjeta a {
+    text-decoration: none;
+}
+
+.tarjeta p {
+    font-size: 0.9rem;
+    color: var(--color5);
+}
+
+/* ================= BENEFICIOS ================= */
+section.bg-light .col-md-3 {
+    padding: 15px;
+}
+
+section.bg-light h6 {
+    color: var(--color4);
+}
+
+/* ================= CTA ================= */
+section.bg-white h2 {
+    color: var(--color4);
+    font-family: "Newsreader", "Sora", serif;
+}
+
+/* ================= FOOTER ================= */
+footer {
+    background-color: var(--color4) !important;
+}
+
+footer small {
+    color: white;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 992px) {
+    .tarjetas {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar .ms-auto {
+        margin-top: 15px;
+    }
+
+    section h1 {
+        font-size: 1.8rem;
+    }
+
+    .tarjeta img {
+        width: 65px;
+    }
+}
+
+@media (max-width: 576px) {
+    .tarjetas {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+
+
+<html lang="es">
+
+
+
+<head>
+
+
+
+    {% load static %}
+
+
+
+    <meta charset="UTF-8">
+
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+    <link href="{% static 'css/stylesplomeria.css' %}" rel="stylesheet">
+
+
+
+    <link rel="stylesheet" href="{% static 'css/cliente.css' %}">
+
+
+
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+
+
+
+
+    <title>Plomer&iacute;a | JobXpress</title>
+
+
+
+
+
+
+
+    
+
+
+
+</head>
+
+
+
+
+
+
+
+<body class="cliente-layout-page cliente-service-page">
+
+
+
+
+
+
+
+<header class="navbar">
+
+
+
+    <div class="logo">
+        <img class="logo-full" src="{% static 'images/logo_sidebar_blue.png' %}" alt="JobXpress">
+    </div>
+
+
+
+    <nav class="nav-links">
+        <a href="/cliente/home" class="active">Inicio</a>
+        <a href="/cliente/historial">Historial Contrataciones</a>
+        <a href="/cliente/perfil">Tu perfil</a>
+        <a href="/cliente/dashboard">Dashboard</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesión</a>
+        <form id="logout-form" action="/logout" method="post" style="display:none;">{% csrf_token %}</form>
+    </nav>
+
+
+
+</header>
+
+
+
+
+
+
+
+<main class="contenedor">
+
+    <h1>Plomería</h1>
+    <p>Profesionales disponibles para instalaciones, reparaciones y mantenimiento hidráulico en tu hogar o negocio.</p>
+
+<div class="tarjetas-usuarios">
+        {% include 'cliente/_service_provider_cards.html' %}
+    </div>
+
+</main>
+
+
+
+
+
+
+
+<!-- MODAL -->
+
+
+
+<div id="modalAcuerdo" class="modal-acuerdo">
+
+
+
+    <div class="modal-contenido">
+
+
+
+        <span class="cerrar" onclick="cerrarModal()">&times;</span>
+
+
+
+        <h2>Nuevo Acuerdo</h2>
+
+
+
+
+
+
+
+        <form id="formAcuerdo">
+
+
+
+            <div class="fila">
+
+
+
+                <div class="form-grupo">
+
+
+
+                    <label>Fecha</label>
+
+
+
+                    <input type="date" id="fecha" required>
+
+
+
+                </div>
+
+
+
+                <div class="form-grupo">
+
+
+
+                    <label>Hora</label>
+
+
+
+                    <input type="time" id="hora" required>
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <div class="form-grupo">
+
+
+
+                <label>Monto (COP)</label>
+
+
+
+                <input type="number" id="monto" min="1000" required>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <div class="form-grupo">
+
+
+
+                <label>Direcci&oacute;n</label>
+
+
+
+                <input type="text" id="direccion" placeholder="Ej: Calle 45 #12-30" required>
+
+
+
+            </div>
+
+            <div class="form-grupo">
+
+                <label>Ubica la direcci&oacute;n en el mapa</label>
+
+                <div class="mapa-wrap">
+
+                    <div id="mapaDireccion"></div>
+
+                </div>
+
+                <button type="button" id="btnValidarDireccion" class="btn-validar">Validar direcci&oacute;n</button>
+
+                <small class="ayuda-direccion" id="estadoDireccion">Sin validar</small>
+
+            </div>
+
+
+
+
+
+
+
+
+            <div class="form-grupo">
+
+
+
+                <label>Descripci&oacute;n</label>
+
+
+
+                <textarea id="descripcion" required></textarea>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <button class="btn-guardar" type="submit">Guardar acuerdo</button>
+
+
+
+        </form>
+
+
+
+    </div>
+
+
+
+</div>
+
+
+
+
+
+
+
+{% include 'cliente/_maps_scripts.html' %}
+<script>
+
+
+
+    const modalAcuerdo = document.getElementById("modalAcuerdo");
+
+    const formAcuerdo = document.getElementById("formAcuerdo");
+
+    const fecha = document.getElementById("fecha");
+
+    const hora = document.getElementById("hora");
+
+    const monto = document.getElementById("monto");
+
+    const direccion = document.getElementById("direccion");
+
+    const descripcion = document.getElementById("descripcion");
+
+    window.prestadorSeleccionado = "";
+
+    window.prestadorSeleccionadoId = null;
+
+    function abrirModal(prestador, prestadorId) {
+        window.prestadorSeleccionado = prestador;
+        window.prestadorSeleccionadoId = prestadorId;
+        modalAcuerdo.style.display = "flex";
+        setTimeout(() => {
+            if (window.JobxpressMaps) {
+                window.JobxpressMaps.initMap();
+            }
+        }, 120);
+    }
+
+    function cerrarModal() {
+
+
+
+        modalAcuerdo.style.display = "none";
+
+
+
+        formAcuerdo.reset();
+
+
+
+    }
+
+
+
+
+
+
+
+    // L&iacute;mites de fecha
+
+
+
+    const fechaInput = document.getElementById("fecha");
+
+
+
+    const hoy = new Date();
+
+
+
+    const max = new Date();
+
+
+
+    max.setMonth(hoy.getMonth() + 1);
+
+
+
+
+
+
+
+    fechaInput.min = hoy.toISOString().split("T")[0];
+
+
+
+    fechaInput.max = max.toISOString().split("T")[0];
+
+
+
+
+
+
+
+    // ===== GUARDAR ACUERDO =====
+
+    document.getElementById("formAcuerdo").addEventListener("submit", e => {
+
+        e.preventDefault();
+
+
+
+        fetch("/cliente/solicitud", {
+
+            method: "POST",
+
+            headers: { "Content-Type": "application/json" },
+
+            body: JSON.stringify({
+
+                prestador_id: window.prestadorSeleccionadoId,
+                servicio_id: {{ servicio_id|default:"null" }},
+
+                servicio: "{{ servicio_nombre|default:'Plomería'|escapejs }}",
+
+                fecha: fecha.value,
+
+                hora: hora.value,
+
+                monto: monto.value,
+
+                direccion: direccion.value,
+
+                descripcion: descripcion.value
+
+            })
+
+        })
+
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+
+        .then(({ ok, data }) => {
+
+            if (!ok) {
+
+                Swal.fire({
+
+                    title: "No se pudo enviar",
+
+                    text: data && data.error ? data.error : "Intenta de nuevo.",
+
+                    icon: "error",
+
+                    confirmButtonColor: "#2d6cdf"
+
+                });
+
+                return;
+
+            }
+
+            Swal.fire({
+
+                title: "¡Acuerdo enviado!",
+
+                text: "El prestador revisará tu solicitud.",
+
+                icon: "success",
+
+                confirmButtonColor: "#2d6cdf"
+
+            });
+
+            cerrarModal();
+
+        })
+
+        .catch(() => {
+
+            Swal.fire({
+
+                title: "Error",
+
+                text: "No se pudo conectar con el servidor.",
+
+                icon: "error",
+
+                confirmButtonColor: "#2d6cdf"
+
+            });
+
+        });
+
+    });
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+</body>
+
+
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

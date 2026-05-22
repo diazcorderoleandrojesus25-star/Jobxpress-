@@ -1,0 +1,51 @@
+[
+  {
+    "model": "core.metodopago",
+    "pk": 1,
+    "fields": {
+      "forma_pago": "Efectivo"
+    }
+  },
+  {
+    "model": "core.metodopago",
+    "pk": 2,
+    "fields": {
+      "forma_pago": "Transferencia Bancaria"
+    }
+  },
+  {
+    "model": "core.metodopago",
+    "pk": 3,
+    "fields": {
+      "forma_pago": "Tarjeta Debito"
+    }
+  },
+  {
+    "model": "core.metodopago",
+    "pk": 4,
+    "fields": {
+      "forma_pago": "Tarjeta Credito"
+    }
+  },
+  {
+    "model": "core.metodopago",
+    "pk": 5,
+    "fields": {
+      "forma_pago": "PSE"
+    }
+  },
+  {
+    "model": "core.metodopago",
+    "pk": 6,
+    "fields": {
+      "forma_pago": "Nequi"
+    }
+  },
+  {
+    "model": "core.metodopago",
+    "pk": 7,
+    "fields": {
+      "forma_pago": "Daviplata"
+    }
+  }
+]

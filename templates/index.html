@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>JobXpress | Servicios a tu alcance</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="bg-light shadow-sm">
+    <nav class="navbar navbar-expand-lg container">
+        <a class="navbar-brand fw-bold" href="/">
+            JobXpress
+        </a>
+
+        <div class="ms-auto">
+            <a href="/login" class="btn btn-outline-primary me-2">Entrar</a>
+            <a href="/registro" class="btn btn-primary">Registrarse</a>
+        </div>
+    </nav>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="py-5 text-center bg-white">
+    <div class="container">
+        <h1 class="fw-bold mb-3">Encuentra el servicio que necesitas</h1>
+        <p class="text-muted mb-4">
+            Conecta con profesionales verificados, calificados y listos para ayudarte cuando lo necesites.
+        </p>
+
+        <a href="/registro" class="btn btn-primary btn-lg">
+            Comenzar ahora
+        </a>
+    </div>
+</section>
+
+<!-- ================= COMO FUNCIONA ================= -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">¿Cómo funciona JobXpress?</h2>
+
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <h5 class="fw-bold">1. Explora servicios</h5>
+                <p class="text-muted">
+                    Navega entre diferentes categorías y encuentra el servicio que necesitas en minutos.
+                </p>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <h5 class="fw-bold">2. Elige un profesional</h5>
+                <p class="text-muted">
+                    Revisa perfiles, valoraciones y experiencia antes de contratar.
+                </p>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <h5 class="fw-bold">3. Contrata con confianza</h5>
+                <p class="text-muted">
+                    Coordina el servicio y recibe atención rápida y segura.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= SERVICIOS ================= -->
+<section id="servicios" class="container my-5">
+
+    <h2 class="text-center mb-4">Nuestros servicios</h2>
+
+    <div class="tarjetas">
+
+        <div class="tarjeta">
+            <img src="{% static 'images/plomeria.png' %}" alt="Plomería">
+            <a href="/cliente/plomeria"><h3>Plomería</h3></a>
+            <p>Fugas, instalaciones y reparaciones del hogar.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/electricidad.png' %}" alt="Electricidad">
+            <a href="/cliente/electricidad"><h3>Electricidad</h3></a>
+            <p>Mantenimiento, arreglos e instalaciones eléctricas.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/carpinteria.png' %}" alt="Carpintería">
+            <a href="/cliente/carpinteria"><h3>Carpintería</h3></a>
+            <p>Muebles, puertas, closets y reparaciones.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/limpieza.png' %}" alt="Limpieza">
+            <a href="/cliente/limpiezagen"><h3>Limpieza general</h3></a>
+            <p>Limpieza para hogares, oficinas y locales.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/soporte.png' %}" alt="Soporte técnico">
+            <a href="/cliente/soportetec"><h3>Soporte técnico</h3></a>
+            <p>Computadores, celulares y redes.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/instalacion.png' %}" alt="Instalación">
+            <a href="/cliente/instalacionnequi">
+                <h3>Instalación de equipos</h3>
+            </a>
+            <p>TV, routers, cámaras y electrodomésticos.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/fisio.png' %}" alt="Fisioterapia">
+            <a href="/cliente/fisioterapia"><h3>Fisioterapia</h3></a>
+            <p>Terapias físicas y rehabilitación.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/salud.png' %}" alt="Salud">
+            <a href="/cliente/salud"><h3>Salud</h3></a>
+            <p>Atención médica básica y especializada.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/tutores.png' %}" alt="Asesorías">
+            <a href="/cliente/asesorias">
+                <h3>Tutores y asesorías</h3>
+            </a>
+            <p>Refuerzo académico y clases particulares.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/cuidadores.png' %}" alt="Mascotas">
+            <a href="/cliente/cuidaranimales">
+                <h3>Cuidadores de animales</h3>
+            </a>
+            <p>Paseo y cuidado de mascotas.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/redaccion.png' %}" alt="Redacción">
+            <a href="/cliente/redaccion">
+                <h3>Redacción de contenido</h3>
+            </a>
+            <p>Artículos, textos web y redes sociales.</p>
+        </div>
+
+        <div class="tarjeta">
+            <img src="{% static 'images/marketing.png' %}" alt="Marketing">
+            <a href="/cliente/marketing">
+                <h3>Marketing digital</h3>
+            </a>
+            <p>Publicidad, redes sociales y posicionamiento.</p>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================= BENEFICIOS ================= -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">¿Por qué elegir JobXpress?</h2>
+
+        <div class="row">
+            <div class="col-md-3 text-center mb-4">
+                <h6 class="fw-bold">Profesionales verificados</h6>
+                <p class="text-muted">Identidad y experiencia comprobadas.</p>
+            </div>
+
+            <div class="col-md-3 text-center mb-4">
+                <h6 class="fw-bold">Ahorra tiempo</h6>
+                <p class="text-muted">Encuentra ayuda sin salir de casa.</p>
+            </div>
+
+            <div class="col-md-3 text-center mb-4">
+                <h6 class="fw-bold">Variedad de servicios</h6>
+                <p class="text-muted">Soluciones para el hogar y lo digital.</p>
+            </div>
+
+            <div class="col-md-3 text-center mb-4">
+                <h6 class="fw-bold">Soporte y seguridad</h6>
+                <p class="text-muted">Plataforma confiable y protegida.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA FINAL ================= -->
+<section class="py-5 text-center bg-white">
+    <div class="container">
+        <h2 class="fw-bold mb-3">¿Eres profesional?</h2>
+        <p class="text-muted mb-4">
+            Regístrate y comienza a ofrecer tus servicios hoy mismo.
+        </p>
+
+        <a href="/registro" class="btn btn-primary btn-lg">
+            Publicar mis servicios
+        </a>
+    </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="bg-dark text-white text-center py-3">
+    <small>© 2025 JobXpress • Todos los derechos reservados</small>
+</footer>
+
+</body>
+</html>

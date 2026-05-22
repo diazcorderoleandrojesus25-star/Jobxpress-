@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del Cliente | JobXpress</title>
+
+    <!-- Estilos base -->
+    <link rel="stylesheet" href="{% static 'css/cliente.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- FUENTE -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- ESTILOS DEL MODAL -->
+    
+</head>
+
+<body class="cliente-layout-page cliente-perfil-page">
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="logo">
+        <img class="logo-full" src="{% static 'images/logo_sidebar_blue.png' %}" alt="JobXpress">
+    </div>
+
+    <nav class="nav-links">
+        <a href="/cliente/home">Inicio</a>
+        <a href="/cliente/historial">Historial Contrataciones</a>
+        <a href="/cliente/perfil" class="active">Tu perfil</a>
+        <a href="/cliente/dashboard">Dashboard</a>
+
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            Cerrar sesión
+        </a>
+
+        <form id="logout-form" action="/logout" method="post" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<!-- PERFIL -->
+<main class="perfil">
+    <div class="perfil-container">
+
+        <h2 class="perfil-titulo">Tu perfil</h2>
+
+        <div class="perfil-card">
+
+            <!-- Imagen -->
+            <div class="perfil-imagen">
+                <img src="{% static 'images/usuario.png' %}" alt="Foto de perfil">
+            </div>
+
+            <!-- Información -->
+            <div class="perfil-info">
+
+                <h3 id="nombreTxt" >{{ usuario.nombre }}</h3>
+
+                <p><strong>Email:</strong> <span id="emailTxt" >{{ usuario.email }}</span></p>
+                <p><strong>Teléfono:</strong> <span id="telTxt" >{{ usuario.telefono }}</span></p>
+                <p><strong>Dirección:</strong> <span id="dirTxt" >{{ usuario.direccion }}</span></p>
+
+                <p><strong>Rol:</strong> Cliente</p>
+
+                <button class="btn-editar" id="btnEditarPerfil" type="button">Editar perfil</button>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- ===== MODAL REAL ===== -->
+<div class="modal-fondo" id="modalPerfil">
+    <div class="modal">
+
+        <h3>Editar Perfil</h3>
+
+        <!-- FORMULARIO QUE ENVÍA AL BACKEND -->
+        <form action="/cliente/perfil/actualizar" method="post" id="formPerfilCliente">
+            {% csrf_token %}
+
+            <label>{{ usuario.nombre }}</label>
+            <input type="text" name="nombre" id="nombreInput" required>
+
+            <label>Email</label>
+            <input type="email" name="email" id="emailInput" required>
+
+            <label>Teléfono</label>
+            <input type="text" name="telefono" id="telInput" inputmode="numeric" maxlength="10" minlength="10" pattern="[0-9]{10}" autocomplete="tel" required>
+
+            <label>Dirección</label>
+            <input type="text" name="direccion" id="dirInput" maxlength="120" autocomplete="street-address" placeholder="Ej: Calle 45 #12-30" required>
+
+            <div class="acciones">
+                <button type="submit">Guardar cambios</button>
+                <button type="button" onclick="cerrarModal()" class="cerrar">Cancelar</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<!-- JS -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const modal = document.getElementById("modalPerfil");
+    const btnEditar = document.getElementById("btnEditarPerfil");
+    const form = document.getElementById("formPerfilCliente");
+    const telInput = document.getElementById("telInput");
+    const dirInput = document.getElementById("dirInput");
+    const direccionRegex = /\b(calle|cl|carrera|cra|cr|avenida|av|diagonal|dg|transversal|tv|autopista|ap|via|vereda|manzana|mz)\b/i;
+
+    btnEditar.addEventListener("click", () => {
+        document.getElementById("nombreInput").value = document.getElementById("nombreTxt").innerText;
+        document.getElementById("emailInput").value = document.getElementById("emailTxt").innerText;
+        document.getElementById("telInput").value = document.getElementById("telTxt").innerText;
+        document.getElementById("dirInput").value = document.getElementById("dirTxt").innerText;
+
+        modal.style.display = "flex";
+    });
+
+    telInput.addEventListener("input", () => {
+        telInput.value = telInput.value.replace(/\D/g, "").slice(0, 10);
+    });
+
+    form.addEventListener("submit", (event) => {
+        const telefono = telInput.value.trim();
+        const direccion = dirInput.value.trim().replace(/\s+/g, " ");
+        const direccionValida =
+            direccion.length >= 8 &&
+            direccion.length <= 120 &&
+            /^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ#.,\-/\s]+$/.test(direccion) &&
+            direccionRegex.test(direccion) &&
+            /\d/.test(direccion) &&
+            (direccion.includes("#") || direccion.includes("-"));
+
+        if (!/^\d{10}$/.test(telefono)) {
+            event.preventDefault();
+            Swal.fire({
+                icon: "error",
+                title: "Telefono invalido",
+                text: "Ingresa solo numeros y usa exactamente 10 digitos."
+            });
+            telInput.focus();
+            return;
+        }
+
+        if (!direccionValida) {
+            event.preventDefault();
+            Swal.fire({
+                icon: "error",
+                title: "Direccion invalida",
+                text: "Ingresa una direccion real, por ejemplo: Calle 45 #12-30."
+            });
+            dirInput.focus();
+            return;
+        }
+
+        dirInput.value = direccion;
+    });
+});
+
+function cerrarModal() {
+    document.getElementById("modalPerfil").style.display = "none";
+}
+</script>
+
+{% if 'updated' in request.GET %}
+<script>
+Swal.fire({
+  icon: 'success',
+  title: 'Perfil actualizado',
+  text: 'Los cambios se guardaron correctamente.',
+  timer: 2200,
+  showConfirmButton: false
+});
+</script>
+{% endif %}
+
+{% if request.GET.error == "telefono" %}
+<script>
+Swal.fire({
+  icon: 'error',
+  title: 'Telefono invalido',
+  text: 'El telefono debe contener solo numeros y tener exactamente 10 digitos.'
+});
+</script>
+{% endif %}
+
+{% if request.GET.error == "direccion" %}
+<script>
+Swal.fire({
+  icon: 'error',
+  title: 'Direccion invalida',
+  text: 'Ingresa una direccion valida, por ejemplo: Calle 45 #12-30.'
+});
+</script>
+{% endif %}
+
+</body>
+</html>
+
+
+
+
+
+

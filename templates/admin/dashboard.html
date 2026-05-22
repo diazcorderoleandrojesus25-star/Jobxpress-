@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - JobXpress</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-modern.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="admin-modern">
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+    <nav class="nav-links">
+        <a href="/admin/dashboard" class="active">Dashboard</a>
+        <a href="/admin/usuarios/lista">Usuarios</a>
+        <a href="/admin/roles/lista">Roles</a>
+        <a href="/admin/servicios/lista">Servicios</a>
+        <a href="/admin/categorias/lista">Categorias</a>
+        <a href="/admin/metodos_pago/lista">Metodos de Pago</a>
+        <a href="/admin/contrataciones">Contrataciones</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
+        <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="admin-shell">
+    <section class="admin-hero admin-hero-grid">
+        <p class="pm-eyebrow">Panel de administracion</p>
+        <h1>Resumen general</h1>
+        <p>Monitorea el rendimiento de la plataforma y accede rapido a los modulos clave.</p>
+    </section>
+
+    <section class="admin-kpis">
+        <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c2-4 6-6 8-6s6 2 8 6"/></svg></div>
+            <div class="kpi-meta"><h4>Usuarios totales</h4><div class="kpi-value">{{ total_usuarios }}</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 12h10"/><path d="M7 16h6"/></svg></div>
+            <div class="kpi-meta"><h4>Contrataciones totales</h4><div class="kpi-value">{{ total_contrataciones }}</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20V9"/><path d="M12 20V4"/><path d="M18 20v-6"/></svg></div>
+            <div class="kpi-meta"><h4>Prestadores activos</h4><div class="kpi-value">{{ prestadores_activos }}</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M9 7V5h6v2"/><path d="M3 12h18"/></svg></div>
+            <div class="kpi-meta"><h4>Servicios activos</h4><div class="kpi-value">{{ servicios_publicados }}</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M16 12h5"/><circle cx="16" cy="12" r="1"/></svg></div>
+            <div class="kpi-meta"><h4>Ganancias</h4><div class="kpi-value">$ {{ ganancias_totales }} COP</div></div>
+        </div>
+    </section>
+
+    <section class="admin-grid-3">
+        <div class="admin-card chart-card">
+            <div class="chart-head"><h3>Usuarios por rol</h3><span class="chip">Actual</span></div>
+            <canvas id="chartRoles" height="180"></canvas>
+        </div>
+        <div class="admin-card chart-card">
+            <div class="chart-head"><h3>Contrataciones (5 dias)</h3><span class="chip">Actividad</span></div>
+            <canvas id="chartContrataciones" height="180"></canvas>
+        </div>
+        <div class="admin-card chart-card">
+            <div class="chart-head"><h3>Estados de contrataciones</h3><span class="chip">Porcentaje</span></div>
+            <canvas id="chartEstados" height="180"></canvas>
+        </div>
+    </section>
+</main>
+
+<script>
+const dayLabels = {{ day_labels|safe }};
+const dayCounts = {{ day_counts|safe }};
+const roleLabels = [{% for r in role_counts %}'{{ r.rol }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+const roleCounts = [{% for r in role_counts %}{{ r.count }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const estadoLabels = ['Pendiente','En proceso','Completada','Cancelada','Rechazada'];
+const estadoCounts = [{{ estados.pendiente }}, {{ estados.proceso }}, {{ estados.completado }}, {{ estados.cancelado }}, {{ estados.rechazado }}];
+
+const css = getComputedStyle(document.documentElement);
+const chartPalette = [
+  css.getPropertyValue('--chart-1').trim(),
+  css.getPropertyValue('--chart-2').trim(),
+  css.getPropertyValue('--chart-3').trim(),
+  css.getPropertyValue('--chart-4').trim(),
+  css.getPropertyValue('--chart-5').trim(),
+  css.getPropertyValue('--chart-6').trim(),
+];
+const ink = css.getPropertyValue('--admin-ink').trim();
+const muted = css.getPropertyValue('--admin-muted').trim();
+const grid = 'rgba(79, 103, 122, 0.12)';
+
+Chart.defaults.font.family = "'Manrope', sans-serif";
+Chart.defaults.color = muted;
+
+new Chart(document.getElementById('chartContrataciones'), {
+  type: 'line',
+  data: { labels: dayLabels, datasets: [{ label: 'Contrataciones', data: dayCounts, borderColor: chartPalette[1], backgroundColor: 'rgba(111, 156, 149, 0.18)', tension: 0.38, fill: true, pointRadius: 4, pointHoverRadius: 6, borderWidth: 3 }] },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: muted } },
+      y: { beginAtZero: true, grid: { color: grid }, ticks: { color: muted } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartRoles'), {
+  type: 'doughnut',
+  data: { labels: roleLabels, datasets: [{ data: roleCounts, backgroundColor: [chartPalette[0], chartPalette[2], chartPalette[3], chartPalette[5]], borderWidth: 0, hoverOffset: 8 }] },
+  options: {
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, color: ink, usePointStyle: true, pointStyle: 'circle' } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartEstados'), {
+  type: 'doughnut',
+  data: { labels: estadoLabels, datasets: [{ data: estadoCounts, backgroundColor: [chartPalette[2], chartPalette[5], chartPalette[1], chartPalette[4], chartPalette[3]], borderWidth: 0, hoverOffset: 8 }] },
+  options: {
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, color: ink, usePointStyle: true, pointStyle: 'circle' } },
+      tooltip: {
+        callbacks: {
+          label: function(ctx) {
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0) || 1;
+            const val = ctx.parsed || 0;
+            const pct = Math.round((val/total)*100);
+            return `${ctx.label}: ${val} (${pct}%)`;
+          }
+        }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
+

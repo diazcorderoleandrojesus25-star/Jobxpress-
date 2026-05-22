@@ -1,0 +1,518 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <title>Registro</title>
+
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Bootstrap Icons (solo para el ojito) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Flatpickr (time picker) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <style>
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem;
+        }
+
+        .full {
+            grid-column: span 2;
+        }
+
+        .btn-primary {
+            margin-top: 1.5rem !important;
+        }
+
+        /* Ajuste solo para registro */
+        .container {
+            max-width: 620px;
+        }
+
+        .dias-wrap {
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            padding:8px 10px;
+            border:1px solid #d6e5ff;
+            border-radius:10px;
+            background:#f7fbff;
+        }
+        .dia-chip {
+            display:flex;
+            align-items:center;
+            gap:6px;
+            background:#e9f2ff;
+            border:1px solid #cfe0ff;
+            padding:6px 10px;
+            border-radius:999px;
+            font-size:0.85rem;
+            color:#1f3b7a;
+            cursor:pointer;
+        }
+        .dia-chip input {
+            accent-color:#2d6cdf;
+        }
+        .horario-wrap {
+            display:flex;
+            gap:10px;
+            align-items:center;
+            background:#f7fbff;
+            border:1px solid #d6e5ff;
+            border-radius:12px;
+            padding:10px;
+            flex-wrap:wrap;
+        }
+        .time-field{
+            display:flex;
+            flex-direction:column;
+            gap:4px;
+            flex:1 1 140px;
+            min-width:140px;
+        }
+        .time-label{
+            font-size:0.78rem;
+            color:#3a5a96;
+            font-weight:600;
+        }
+        .horario-wrap input[type="text"]{
+            background:#ffffff;
+            border:1px solid #cfe0ff;
+            border-radius:10px;
+            padding:9px 10px;
+            box-shadow:inset 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .horario-wrap input[type="text"]:focus{
+            outline:none;
+            border-color:#2d6cdf;
+            box-shadow:0 0 0 2px rgba(45,108,223,0.15);
+        }
+
+        /* Ajuste de colores para prestador (misma paleta del login/registro) */
+        .dias-wrap {
+            border: 1px solid #cfe0d6;
+            background: #f3efe8;
+        }
+        .dia-chip {
+            background: #cfe0d6;
+            border: 1px solid #8da4a3;
+            color: #1f2a33;
+        }
+        .dia-chip input {
+            accent-color: #6f9c95;
+        }
+        .horario-wrap {
+            background: #f3efe8;
+            border: 1px solid #cfe0d6;
+        }
+        .time-label {
+            color: #29435a;
+        }
+        .horario-wrap input[type="text"] {
+            background: #f3efe8;
+            border: 1px solid #cfe0d6;
+        }
+        .horario-wrap input[type="text"]:focus {
+            border-color: #6f9c95;
+            box-shadow: 0 0 0 2px rgba(111, 156, 149, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="login-logo">
+        <img src="{% static 'images/logo_sidebar_blue.png' %}?v=2" alt="JobXpress Logo">
+    </div>
+
+    <h2>Registro</h2>
+    <p class="welcome-text">¡Crea tu cuenta y forma parte de JobXpress!</p>
+
+    <!-- Errores backend -->
+    {% if error %}
+    <div class="alert alert-danger">
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <form id="registroForm" method="POST" action="/registro">
+
+        <div class="grid-2">
+
+            <!-- Nombre -->
+            <div>
+                <label>Nombre</label>
+                <input type="text" name="nombre" class="form-control" required>
+            </div>
+
+            <!-- Apellido -->
+            <div>
+                <label>Apellido</label>
+                <input type="text" name="apellido" class="form-control" required>
+            </div>
+
+            <!-- Teléfono -->
+            <div>
+                <label>Teléfono</label>
+                <input type="text" name="telefono" class="form-control" required>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+
+            <!-- Contraseña (MODIFICADO SOLO AQUI) -->
+            <div>
+                <label>Contraseña</label>
+                <div class="input-group">
+                    <input id="pass1" type="password" name="contrasena" class="form-control" required>
+                    <span class="input-group-text" style="cursor:pointer" onclick="togglePass('pass1','eye1')">
+                        <i id="eye1" class="bi bi-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+
+            <!-- Confirmar Contraseña (MODIFICADO SOLO AQUI) -->
+            <div>
+                <label>Confirmar Contraseña</label>
+                <div class="input-group">
+                    <input id="pass2" type="password" name="contrasena_confirmation" class="form-control" required>
+                    <span class="input-group-text" style="cursor:pointer" onclick="togglePass('pass2','eye2')">
+                        <i id="eye2" class="bi bi-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div class="password-hint full" id="passwordHint">
+                Requisitos de contraseña:
+                <ul>
+                    <li id="req-length">Mínimo 6 caracteres</li>
+                    <li id="req-letter">Al menos una letra</li>
+                    <li id="req-number">Al menos un número</li>
+                </ul>
+            </div>
+
+            <!-- Dirección -->
+            <div>
+                <label>Dirección</label>
+                <input type="text" name="direccion" class="form-control" required>
+            </div>
+
+            <!-- Rol -->
+            <div>
+                <label>Rol</label>
+                <select name="id_rol" id="rol_select" class="form-control" required>
+                    <option value="2">Cliente</option>
+                    <option value="3">Prestador</option>
+                    
+                </select>
+            </div>
+
+
+            <!-- Servicio (solo prestador) -->
+            <div id="servicio_block" class="full" style="display:none;">
+                <label>Servicio</label>
+                <select name="servicio_id" id="servicio_id" class="form-control">
+                    <option value="">Selecciona un servicio</option>
+                    {% for s in servicios %}
+                    <option value="{{ s.id_servicio }}">{{ s.nombre }}{% if s.categoria %} - {{ s.categoria.nombre }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="prestador_detalle_block" class="full" style="display:none;">
+                <label>Días de atención</label>
+                <div class="dias-wrap">
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Lun"> Lun</label>
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Mar"> Mar</label>
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Mié"> Mié</label>
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Jue"> Jue</label>
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Vie"> Vie</label>
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Sáb"> Sáb</label>
+                    <label class="dia-chip"><input type="checkbox" name="prestador_dias" value="Dom"> Dom</label>
+                </div>
+                <label style="margin-top:8px;">Horario de atención</label>
+                <div class="horario-wrap">
+                    <div class="time-field">
+                        <span class="time-label">Desde</span>
+                        <input type="text" name="prestador_hora_inicio" id="prestador_hora_inicio" class="timepicker" placeholder="07:00 a. m.">
+                    </div>
+                    <div class="time-field">
+                        <span class="time-label">Hasta</span>
+                        <input type="text" name="prestador_hora_fin" id="prestador_hora_fin" class="timepicker" placeholder="05:00 p. m.">
+                    </div>
+                </div>
+                <label style="margin-top:8px;">Descripción de lo que haces</label>
+                <textarea name="prestador_descripcion" id="prestador_descripcion" class="form-control" rows="3" placeholder="Ej: Reparaciones, instalaciones y mantenimiento."></textarea>
+            </div>
+
+        </div>
+
+        <button type="button" class="btn-primary" onclick="enviarRegistro()">Registrarme</button>
+
+    </form>
+
+    <div class="mt-3 text-center">
+        <p>¿Ya tienes cuenta?
+            <a href="/login">Inicia sesión aquí</a>
+        </p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+// Flatpickr (selector de hora)
+if (window.flatpickr) {
+    flatpickr(".timepicker", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "h:i K",
+        time_24hr: false
+    });
+}
+
+function toggleServicioBlock() {
+    const rol = document.getElementById("rol_select");
+    const block = document.getElementById("servicio_block");
+    const blockDetalle = document.getElementById("prestador_detalle_block");
+    if (!rol || !block) return;
+    if (rol.value === "3") {
+        block.style.display = "block";
+        if (blockDetalle) blockDetalle.style.display = "block";
+    } else {
+        block.style.display = "none";
+        if (blockDetalle) blockDetalle.style.display = "none";
+        const sel = document.getElementById("servicio_id");
+        if (sel) sel.value = "";
+        if (blockDetalle) {
+            const d = document.querySelectorAll("input[name='prestador_dias']");
+            const h1 = document.getElementById("prestador_hora_inicio");
+            const h2 = document.getElementById("prestador_hora_fin");
+            const desc = document.getElementById("prestador_descripcion");
+            if (d) d.forEach(cb => cb.checked = false);
+            if (h1) h1.value = "";
+            if (h2) h2.value = "";
+            if (desc) desc.value = "";
+        }
+    }
+}
+
+window.addEventListener("DOMContentLoaded", toggleServicioBlock);
+const rolSelect = document.getElementById("rol_select");
+if (rolSelect) {
+    rolSelect.addEventListener("change", toggleServicioBlock);
+}
+
+function enviarRegistro() {
+
+    const form = document.getElementById("registroForm");
+    guardarBorradorRegistro(form);
+
+    const nombre = form.nombre.value.trim();
+    const apellido = form.apellido.value.trim();
+    const telefono = form.telefono.value.trim();
+    const email = form.email.value.trim();
+    const pass = form.contrasena.value.trim();
+    const confirm = form.contrasena_confirmation.value.trim();
+    const direccion = form.direccion.value.trim();
+    const rol = form.id_rol.value;
+    const servicio = form.servicio_id ? form.servicio_id.value : "";
+    const diasSeleccionados = Array.from(form.querySelectorAll("input[name='prestador_dias']:checked")).map(el => el.value);
+    const prestadorHorarioInicio = form.prestador_hora_inicio ? form.prestador_hora_inicio.value.trim() : "";
+    const prestadorHorarioFin = form.prestador_hora_fin ? form.prestador_hora_fin.value.trim() : "";
+    const prestadorDescripcion = form.prestador_descripcion ? form.prestador_descripcion.value.trim() : "";
+
+    // Validar campos vacíos
+    if (!nombre || !apellido || !telefono || !email || !pass || !confirm || !direccion || !rol) {
+        Swal.fire({
+            title: "Campos incompletos",
+            text: "Por favor completa todos los campos del formulario.",
+            icon: "warning"
+        });
+        return;
+    }
+
+    // Validar teléfono
+    if (!/^[0-9]{7,15}$/.test(telefono)) {
+        Swal.fire({
+            title: "Teléfono inválido",
+            text: "El número de teléfono debe contener solo números (7 a 15 dígitos).",
+            icon: "error"
+        });
+        return;
+    }
+
+    // Validar email básico
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+        Swal.fire({
+            title: "Correo inválido",
+            text: "Ingresa un correo electrónico válido.",
+            icon: "error"
+        });
+        return;
+    }
+
+    // Validar longitud contraseña
+    if (pass.length < 6) {
+        Swal.fire({
+            title: "Contraseña muy corta",
+            text: "La contraseña debe tener al menos 6 caracteres.",
+            icon: "warning"
+        });
+        return;
+    }
+
+    // Validar coincidencia de contraseñas
+    if (pass !== confirm) {
+        Swal.fire({
+            title: "Error",
+            text: "Las contraseñas no coinciden",
+            icon: "error"
+        });
+        return;
+    }
+
+    if (rol === "3") {
+        if (!servicio) {
+            Swal.fire({ title: "Servicio requerido", text: "Selecciona un servicio.", icon: "warning" });
+            return;
+        }
+        if (!diasSeleccionados.length || !prestadorHorarioInicio || !prestadorHorarioFin || !prestadorDescripcion) {
+            Swal.fire({
+                title: "Datos del prestador incompletos",
+                text: "Completa días, horario y descripción.",
+                icon: "warning"
+            });
+            return;
+        }
+    }
+
+    // Confirmación final
+    Swal.fire({
+        title: "Confirmar registro",
+        text: "¿Deseas crear la cuenta?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#248f8d",
+        confirmButtonText: "Sí, registrarme",
+        cancelButtonText: "Cancelar"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+}
+
+function actualizarRequisitos() {
+    const passInput = document.getElementById("pass1");
+    if (!passInput) return;
+    const valor = passInput.value || "";
+    const reqLength = document.getElementById("req-length");
+    const reqLetter = document.getElementById("req-letter");
+    const reqNumber = document.getElementById("req-number");
+
+    if (reqLength) reqLength.classList.toggle("valid", valor.length >= 6);
+    if (reqLetter) reqLetter.classList.toggle("valid", /[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(valor));
+    if (reqNumber) reqNumber.classList.toggle("valid", /\d/.test(valor));
+}
+
+const pass1 = document.getElementById("pass1");
+if (pass1) {
+    pass1.addEventListener("input", actualizarRequisitos);
+    actualizarRequisitos();
+}
+
+/* Guardar/recuperar borrador del registro */
+const DRAFT_KEY = "jobxpress_registro_draft_v1";
+
+function guardarBorradorRegistro(form) {
+    if (!form) return;
+    const data = {
+        nombre: form.nombre?.value || "",
+        apellido: form.apellido?.value || "",
+        telefono: form.telefono?.value || "",
+        email: form.email?.value || "",
+        direccion: form.direccion?.value || "",
+        rol: form.id_rol?.value || "",
+        servicio_id: form.servicio_id?.value || "",
+        dias: Array.from(form.querySelectorAll("input[name='prestador_dias']:checked")).map(el => el.value),
+        hora_inicio: form.prestador_hora_inicio?.value || "",
+        hora_fin: form.prestador_hora_fin?.value || "",
+        descripcion: form.prestador_descripcion?.value || ""
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+}
+
+function limpiarBorradorRegistro() {
+    localStorage.removeItem(DRAFT_KEY);
+}
+
+function aplicarBorradorRegistro(form, data) {
+    if (!form || !data) return;
+    if (form.nombre && !form.nombre.value) form.nombre.value = data.nombre || "";
+    if (form.apellido && !form.apellido.value) form.apellido.value = data.apellido || "";
+    if (form.telefono && !form.telefono.value) form.telefono.value = data.telefono || "";
+    if (form.email && !form.email.value) form.email.value = data.email || "";
+    if (form.direccion && !form.direccion.value) form.direccion.value = data.direccion || "";
+    if (form.id_rol && data.rol) form.id_rol.value = data.rol;
+    toggleServicioBlock();
+    if (form.servicio_id && data.servicio_id) form.servicio_id.value = data.servicio_id;
+    if (Array.isArray(data.dias)) {
+        form.querySelectorAll("input[name='prestador_dias']").forEach(cb => {
+            cb.checked = data.dias.includes(cb.value);
+        });
+    }
+    if (form.prestador_hora_inicio && data.hora_inicio) form.prestador_hora_inicio.value = data.hora_inicio;
+    if (form.prestador_hora_fin && data.hora_fin) form.prestador_hora_fin.value = data.hora_fin;
+    if (form.prestador_descripcion && data.descripcion) form.prestador_descripcion.value = data.descripcion;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("registroForm");
+    if (!form) return;
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (raw) {
+        try {
+            const data = JSON.parse(raw);
+            aplicarBorradorRegistro(form, data);
+        } catch (e) {
+            // si el storage se corrompe, lo limpiamos
+            localStorage.removeItem(DRAFT_KEY);
+        }
+    }
+    form.addEventListener("input", () => guardarBorradorRegistro(form));
+    form.addEventListener("change", () => guardarBorradorRegistro(form));
+});
+
+
+/* Script del ojito */
+function togglePass(inputId, eyeId) {
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(eyeId);
+
+    if (input.type === "password") {
+        input.type = "text";
+        eye.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+        input.type = "password";
+        eye.classList.replace("bi-eye-slash", "bi-eye");
+    }
+}
+</script>
+
+
+</body>
+</html>
+
+

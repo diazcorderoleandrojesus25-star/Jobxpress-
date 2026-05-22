@@ -1,0 +1,20 @@
+[
+  {
+    "model": "core.usuario",
+    "pk": 1,
+    "fields": {
+      "nombre": "Administrador",
+      "apellido": "Base",
+      "email": "admin@jobxpress.local",
+      "telefono": "3000000000",
+      "contrasena": "$2b$12$rFF2hbjB7/V8J6XQUIjIdeOcG.zKHf7v5PxEV0G/7MB9GkzEqltYy",
+      "direccion": "Calle 10 # 20-30",
+      "created_at": "2026-05-20T00:00:00-05:00",
+      "updated_at": "2026-05-20T00:00:00-05:00",
+      "reset_token": null,
+      "foto_perfil": null,
+      "activo": 1,
+      "rol": 1
+    }
+  }
+]

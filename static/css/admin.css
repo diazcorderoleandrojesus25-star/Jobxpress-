@@ -1,0 +1,422 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* === PALETA BASE (Limpieza y frescura) === */
+:root {
+  --color1: #F5F5F5;
+  --color2: #E3F2FD;
+  --color3: #29B6F6;
+  --color4: #0277BD;
+  --color5: #455A64;
+}
+
+/* === RESET === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, var(--color2) 0%, #BBDEFB 50%, var(--color2) 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite;
+  color: var(--color5);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* === NAVBAR === */
+.navbar {
+  background-color: var(--color5);
+  color: var(--color1);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  animation: slideDown 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  transform: translateY(-100%);
+}
+
+@keyframes slideDown {
+  0% { transform: translateY(-100%); }
+  60% { transform: translateY(10px); }
+  100% { transform: translateY(0); }
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color1);
+  animation: logoPulse 2s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.nav-links a {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--color1);
+  text-decoration: none;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-links a:hover {
+  background-color: var(--color3);
+  color: var(--color5);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.nav-links a.active {
+  background-color: var(--color3);
+  color: var(--color5);
+  box-shadow: 0 4px 10px rgba(41, 182, 246, 0.35);
+}
+
+/* === DASHBOARD === */
+.admin-dashboard {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: var(--color1);
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  animation: fadeInScale 1.2s ease-out forwards;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.admin-dashboard h1 {
+  text-align: center;
+  font-size: 2.3rem;
+  color: var(--color4);
+  margin-bottom: 2.5rem;
+  font-weight: 700;
+}
+
+/* === TARJETAS === */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.tarjeta {
+  background-color: var(--color2);
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  color: var(--color5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border: 1px solid rgba(41, 182, 246, 0.2);
+}
+
+.tarjeta:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(41, 182, 246, 0.3);
+  border-color: var(--color3);
+}
+
+.tarjeta h3 {
+  color: var(--color4);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tarjeta p {
+  font-size: 1.6rem;
+  color: var(--color5);
+  font-weight: 700;
+}
+
+/* === USUARIOS POR ROL === */
+.usuarios-por-rol {
+  background: var(--color1);
+  padding: 2rem;
+  border-radius: 15px;
+  margin-bottom: 3rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(2, 119, 189, 0.1);
+}
+
+.usuarios-por-rol h3 {
+  color: var(--color4);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.barra-rol {
+  margin-bottom: 1rem;
+}
+
+.barra-rol span {
+  font-weight: 500;
+  color: var(--color5);
+}
+
+.barra {
+  height: 18px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--color3), var(--color4));
+  margin-top: 0.4rem;
+  transition: width 0.6s ease;
+}
+
+/* === SERVICIOS POR SEMANA === */
+.servicios-semana {
+  background: var(--color2);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(41, 182, 246, 0.2);
+}
+
+.servicios-semana h3 {
+  color: var(--color4);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.bar-chart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 200px;
+  gap: 1rem;
+}
+
+.bar {
+  width: 45px;
+  background: linear-gradient(to top, var(--color4), var(--color3));
+  border-radius: 8px 8px 0 0;
+  height: var(--valor, 50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  transition: all 0.4s ease;
+}
+
+.bar:hover {
+  transform: scale(1.1);
+  background: linear-gradient(to top, var(--color3), #BBDEFB);
+}
+
+.bar span {
+  margin-top: 8px;
+  color: var(--color5);
+  font-weight: 500;
+}
+
+/* === FOOTER === */
+.footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--color5);
+  color: var(--color1);
+  font-size: 0.9rem;
+  margin-top: 3rem;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .bar-chart {
+    height: 150px;
+  }
+
+  .tarjetas {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard h1 {
+    font-size: 1.8rem;
+  }
+}
+
+
+/* === CRUD TABLES / FORMS === */
+.table,
+.tabla-admin {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(2, 119, 189, 0.12);
+}
+
+.table thead th,
+.tabla-admin thead th {
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-size: 0.75rem;
+}
+
+.table td,
+.tabla-admin td {
+  vertical-align: middle;
+}
+
+.table td:last-child,
+.tabla-admin td:last-child {
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.badge-activo {
+  background: #DFF5E1;
+  color: #1B5E20;
+  border: 1px solid #4CAF50;
+}
+
+.badge-inactivo {
+  background: #FFF1E0;
+  color: #E65100;
+  border: 1px solid #FB8C00;
+}
+
+.btn-sm {
+  border-radius: 8px;
+  font-weight: 600;
+}
+.table thead th,
+.tabla-admin thead th {
+  background: linear-gradient(90deg, #0277BD, #29B6F6);
+  color: #ffffff;
+  border: none;
+}
+
+.table tbody tr:hover,
+.tabla-admin tbody tr:hover {
+  background: #E3F2FD;
+}
+
+.form-control,
+.form-select,
+.formulario-admin input,
+.formulario-admin select {
+  border-radius: 10px;
+  border: 1px solid rgba(2, 119, 189, 0.25);
+  padding: 0.6rem 0.8rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+.formulario-admin input:focus,
+.formulario-admin select:focus {
+  border-color: #29B6F6;
+  box-shadow: 0 0 0 3px rgba(41, 182, 246, 0.2);
+  outline: none;
+}
+
+.btn,
+.btn-crear,
+.btn-editar,
+.btn-eliminar,
+.btn-guardar,
+.btn-cancelar {
+  border-radius: 10px !important;
+  font-weight: 600;
+}
+
+.btn-crear,
+.btn-guardar {
+  background: #0277BD;
+  color: #ffffff;
+  border: none;
+  padding: 0.55rem 1rem;
+}
+
+.btn-crear:hover,
+.btn-guardar:hover {
+  background: #015c92;
+  color: #ffffff;
+}
+
+.btn-editar {
+  background: #29B6F6;
+  color: #0c2f3b;
+  border: none;
+  padding: 0.45rem 0.9rem;
+}
+
+.btn-editar:hover {
+  background: #1aa7e2;
+}
+
+.btn-eliminar {
+  background: #E53935;
+  color: #ffffff;
+  border: none;
+  padding: 0.45rem 0.9rem;
+}
+
+.btn-eliminar:hover {
+  background: #c62828;
+}
+
+.btn-cancelar {
+  background: #455A64;
+  color: #ffffff;
+  border: none;
+  padding: 0.45rem 0.9rem;
+}
+
+.btn-cancelar:hover {
+  background: #37474F;
+}
+
+/* === PAGINACION === */
+.pagination .page-link {
+  color: #0277BD;
+  border: 1px solid rgba(2, 119, 189, 0.2);
+}
+
+.pagination .page-item.active .page-link {
+  background: #0277BD;
+  border-color: #0277BD;
+  color: #ffffff;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #90A4AE;
+}

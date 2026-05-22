@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Usuarios - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-modern.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="admin-modern">
+
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+    <nav class="nav-links">
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/usuarios/lista" class="active">Usuarios</a>
+        <a href="/admin/roles/lista">Roles</a>
+        <a href="/admin/servicios/lista">Servicios</a>
+        <a href="/admin/categorias/lista">Categorias</a>
+        <a href="/admin/metodos_pago/lista">Metodos de Pago</a>
+        <a href="/admin/contrataciones">Contrataciones</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
+        <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="admin-shell">
+    <section class="admin-hero admin-hero-grid">
+        <p class="pm-eyebrow">Gestion de usuarios</p>
+        <h1>Lista de usuarios</h1>
+        <p>Administra registros, revisa el estado de acceso y exporta informacion del sistema.</p>
+    </section>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if request.GET.carga_ok %}
+    <div class="alert alert-success">Carga masiva: {{ request.GET.carga_ok }} creados, {{ request.GET.carga_skip }} omitidos, {{ request.GET.carga_err }} con error.</div>
+    {% endif %}
+
+    <section class="admin-filter-card">
+        <form class="row g-2" method="get" action="/admin/usuarios/lista">
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="idUsuario" placeholder="ID" value="{{ filtroId }}">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="nombre" placeholder="Nombre" value="{{ filtroNombre }}">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="idRol">
+                    <option value="">Todos los roles</option>
+                    {% for r in roles %}
+                    <option value="{{ r.id_rol }}" {% if r.id_rol|stringformat:'s' == filtroRol|stringformat:'s' %}selected{% endif %}>{{ r.rol }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="activo">
+                    <option value="">Estado</option>
+                    <option value="1" {% if filtroActivo == '1' %}selected{% endif %}>Activo</option>
+                    <option value="0" {% if filtroActivo == '0' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success w-100">Filtrar</button>
+            </div>
+            <div class="col-md-2">
+                <a class="btn btn-secondary w-100" href="/admin/usuarios/lista">Limpiar</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="admin-upload-card">
+        <div class="admin-toolbar">
+            <div>
+                <h5>Carga masiva de usuarios</h5>
+                <p class="admin-help">Importa usuarios desde CSV con rol y estado definidos.</p>
+            </div>
+        </div>
+        <form method="post" action="/admin/usuarios/carga" enctype="multipart/form-data" class="row g-2">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <input type="file" name="archivo" class="form-control" accept=".csv" required>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" type="submit">Subir CSV</button>
+            </div>
+            <div class="col-md-3 d-flex align-items-center">
+                <span class="admin-upload-note">Columnas: nombre, apellido, email, telefono, direccion, rol, contrasena, activo</span>
+            </div>
+        </form>
+    </section>
+
+    <div class="admin-page-actions">
+        <a class="btn btn-primary" href="/admin/usuarios/crear">+ Crear usuario</a>
+        <a class="btn btn-danger" href="/admin/usuarios/exportar-pdf?idUsuario={{ filtroId|default_if_none:'' }}&nombre={{ filtroNombre|default_if_none:'' }}&idRol={{ filtroRol|default_if_none:'' }}&activo={{ filtroActivo|default_if_none:'' }}">Exportar PDF</a>
+    </div>
+
+    <section class="admin-data-card">
+        <div class="table-responsive admin-table-wrap">
+            <table class="table table-striped table-hover admin-table">
+                <thead>
+                <tr data-user-row="{{ u.id_usuario }}">
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for u in usuarios %}
+                <tr data-user-row="{{ u.id_usuario }}">
+                    <td data-user-id>{{ u.id_usuario }}</td>
+                    <td data-user-name>{{ u.nombre }} {{ u.apellido }}</td>
+                    <td data-user-email>{{ u.email }}</td>
+                    <td data-user-role>{% if u.rol %}{{ u.rol.rol }}{% else %}-{% endif %}</td>
+                    <td data-user-status>
+                        {% if u.activo == 1 %}
+                        <span class="badge badge-activo">Activo</span>
+                        {% else %}
+                        <span class="badge badge-inactivo">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="admin-actions">
+                            <button type="button" class="btn btn-warning btn-sm js-user-edit" data-user-id="{{ u.id_usuario }}">Editar</button>
+                            {% if u.activo == 1 %}
+                            <a href="/admin/usuarios/eliminar/{{ u.id_usuario }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Desactivar usuario?')">Desactivar</a>
+                            {% else %}
+                            <a href="/admin/usuarios/activar/{{ u.id_usuario }}" class="btn btn-success btn-sm">Activar</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">No hay usuarios para mostrar.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&idUsuario={{ filtroId|default_if_none:'' }}&nombre={{ filtroNombre|default_if_none:'' }}&idRol={{ filtroRol|default_if_none:'' }}&activo={{ filtroActivo|default_if_none:'' }}">Anterior</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                {% endif %}
+
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&idUsuario={{ filtroId|default_if_none:'' }}&nombre={{ filtroNombre|default_if_none:'' }}&idRol={{ filtroRol|default_if_none:'' }}&activo={{ filtroActivo|default_if_none:'' }}">Siguiente</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </section>
+
+    <a class="btn btn-secondary" href="/admin/dashboard">Volver al panel</a>
+</main>
+
+<div class="admin-modal-backdrop" id="userEditModal">
+    <div class="admin-modal-card">
+        <div class="admin-modal-head">
+            <div>
+                <p class="pm-eyebrow">Edicion rapida</p>
+                <h3>Editar usuario</h3>
+            </div>
+            <button type="button" class="admin-modal-close" id="closeUserEditModal" aria-label="Cerrar">&times;</button>
+        </div>
+        <form id="userEditForm" class="row g-3">
+            {% csrf_token %}
+            <input type="hidden" id="userEditId">
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input class="form-control" id="userEditNombre" name="nombre" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellido</label>
+                <input class="form-control" id="userEditApellido" name="apellido" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input class="form-control" id="userEditEmail" name="email" type="email" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Telefono</label>
+                <input class="form-control" id="userEditTelefono" name="telefono" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Direccion</label>
+                <input class="form-control" id="userEditDireccion" name="direccion" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Nueva contraseña</label>
+                <input type="password" class="form-control" id="userEditContrasena" name="contrasena" placeholder="Solo si la cambias">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Rol</label>
+                <select class="form-select" id="userEditRol" name="rol_id" required></select>
+            </div>
+            <div class="col-12 admin-inline-actions">
+                <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                <button class="btn btn-secondary" type="button" id="cancelUserEditModal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const userModal = document.getElementById("userEditModal");
+const userForm = document.getElementById("userEditForm");
+const userEditRol = document.getElementById("userEditRol");
+const userEditId = document.getElementById("userEditId");
+const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
+
+function toggleUserModal(show) {
+    userModal?.classList.toggle("is-open", !!show);
+}
+
+function getUserRow(id) {
+    return document.querySelector(`[data-user-row="${id}"]`);
+}
+
+function setStatusBadge(row, activo) {
+    const statusCell = row?.querySelector("[data-user-status]");
+    if (!statusCell) return;
+    statusCell.innerHTML = activo
+        ? '<span class="badge badge-activo">Activo</span>'
+        : '<span class="badge badge-inactivo">Inactivo</span>';
+}
+
+function setToggleButtonState(row, activo) {
+    const editBtn = row?.querySelector(".js-user-edit");
+    const oldToggle = row?.querySelector(".js-user-toggle, a[href*='/admin/usuarios/eliminar/'], a[href*='/admin/usuarios/activar/']");
+    if (!row || !editBtn || !oldToggle) return;
+
+    const actionHtml = activo
+        ? `<button type="button" class="btn btn-danger btn-sm js-user-toggle" data-user-id="${row.dataset.userRow}" data-action="eliminar">Desactivar</button>`
+        : `<button type="button" class="btn btn-success btn-sm js-user-toggle" data-user-id="${row.dataset.userRow}" data-action="activar">Activar</button>`;
+
+    row.querySelector(".admin-actions").innerHTML = `
+        ${editBtn.outerHTML}
+        ${actionHtml}
+    `;
+    bindAdminUserActions(row);
+}
+
+async function openUserEdit(id) {
+    try {
+        const response = await fetch(`/admin/usuarios/editar/${id}`, {
+            headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "No se pudo cargar el usuario.");
+
+        userEditId.value = data.usuario.id;
+        document.getElementById("userEditNombre").value = data.usuario.nombre || "";
+        document.getElementById("userEditApellido").value = data.usuario.apellido || "";
+        document.getElementById("userEditEmail").value = data.usuario.email || "";
+        document.getElementById("userEditTelefono").value = data.usuario.telefono || "";
+        document.getElementById("userEditDireccion").value = data.usuario.direccion || "";
+        document.getElementById("userEditContrasena").value = "";
+        userEditRol.innerHTML = (data.roles || []).map((rol) => `
+            <option value="${rol.id}" ${String(rol.id) === String(data.usuario.rolId) ? "selected" : ""}>${rol.rol}</option>
+        `).join("");
+        toggleUserModal(true);
+    } catch (error) {
+        Swal.fire({ icon: "error", title: "No se pudo abrir", text: error.message || "Intenta nuevamente." });
+    }
+}
+
+async function submitUserEdit(event) {
+    event.preventDefault();
+    const id = userEditId.value;
+    const formData = new FormData(userForm);
+
+    try {
+        const response = await fetch(`/admin/usuarios/editar/${id}`, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrfToken
+            },
+            body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "No se pudo actualizar.");
+
+        const row = getUserRow(id);
+        if (row) {
+            row.querySelector("[data-user-name]").textContent = `${data.usuario.nombre} ${data.usuario.apellido}`;
+            row.querySelector("[data-user-email]").textContent = data.usuario.email;
+            row.querySelector("[data-user-role]").textContent = data.usuario.rol || "-";
+            setStatusBadge(row, data.usuario.activo === 1);
+            setToggleButtonState(row, data.usuario.activo === 1);
+        }
+
+        toggleUserModal(false);
+        Swal.fire({ toast: true, position: "top-end", icon: "success", title: "Usuario actualizado", showConfirmButton: false, timer: 1700 });
+    } catch (error) {
+        Swal.fire({ icon: "error", title: "No se pudo guardar", text: error.message || "Intenta nuevamente." });
+    }
+}
+
+async function toggleUserActive(id, action) {
+    const normalizedAction = action === "desactivar" ? "eliminar" : action;
+    const isActivating = normalizedAction === "activar";
+    const confirm = await Swal.fire({
+        icon: "question",
+        title: isActivating ? "¿Activar este usuario?" : "¿Desactivar este usuario?",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: "Cancelar"
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const response = await fetch(`/admin/usuarios/${normalizedAction}/${id}`, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrfToken
+            }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "No se pudo actualizar.");
+
+        const row = getUserRow(id);
+        if (row) {
+            const activo = data.activo === 1;
+            setStatusBadge(row, activo);
+            setToggleButtonState(row, activo);
+        }
+
+        Swal.fire({ toast: true, position: "top-end", icon: "success", title: isActivating ? "Usuario activado" : "Usuario desactivado", showConfirmButton: false, timer: 1700 });
+    } catch (error) {
+        Swal.fire({ icon: "error", title: "No se pudo actualizar", text: error.message || "Intenta nuevamente." });
+    }
+}
+
+function bindAdminUserActions(scope = document) {
+    scope.querySelectorAll(".js-user-edit").forEach((button) => {
+        if (button.dataset.bound === "1") return;
+        button.dataset.bound = "1";
+        button.addEventListener("click", () => openUserEdit(button.dataset.userId));
+    });
+
+    scope.querySelectorAll(".js-user-toggle, a[href*='/admin/usuarios/eliminar/'], a[href*='/admin/usuarios/activar/']").forEach((button) => {
+        if (button.dataset.bound === "1") return;
+        button.dataset.bound = "1";
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            const href = button.getAttribute("href") || "";
+            const action = button.dataset.action || (href.includes("/activar/") ? "activar" : "eliminar");
+            const id = button.dataset.userId || href.split("/").pop();
+            toggleUserActive(id, action);
+        });
+    });
+}
+
+bindAdminUserActions();
+document.getElementById("closeUserEditModal")?.addEventListener("click", () => toggleUserModal(false));
+document.getElementById("cancelUserEditModal")?.addEventListener("click", () => toggleUserModal(false));
+userModal?.addEventListener("click", (event) => {
+    if (event.target === userModal) toggleUserModal(false);
+});
+userForm?.addEventListener("submit", submitUserEdit);
+</script>
+</body>
+</html>

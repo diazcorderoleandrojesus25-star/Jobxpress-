@@ -1,0 +1,23 @@
+[
+  {
+    "model": "core.rol",
+    "pk": 1,
+    "fields": {
+      "rol": "ROLE_ADMIN"
+    }
+  },
+  {
+    "model": "core.rol",
+    "pk": 2,
+    "fields": {
+      "rol": "ROLE_CLIENTE"
+    }
+  },
+  {
+    "model": "core.rol",
+    "pk": 3,
+    "fields": {
+      "rol": "ROLE_PRESTADOR"
+    }
+  }
+]

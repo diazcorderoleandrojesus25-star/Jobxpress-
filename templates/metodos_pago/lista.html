@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Metodos de Pago - Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-modern.css' %}">
+</head>
+<body class="admin-modern">
+
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+    <nav class="nav-links">
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/usuarios/lista">Usuarios</a>
+        <a href="/admin/roles/lista">Roles</a>
+        <a href="/admin/servicios/lista">Servicios</a>
+        <a href="/admin/categorias/lista">Categorias</a>
+        <a href="/admin/metodos_pago/lista" class="active">Metodos de Pago</a>
+        <a href="/admin/contrataciones">Contrataciones</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesion</a>
+        <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="admin-shell">
+    <section class="admin-hero admin-hero-grid">
+        <p class="pm-eyebrow">Pagos y facturacion</p>
+        <h1>Metodos de pago</h1>
+        <p>Organiza las formas de pago disponibles para contrataciones y reportes.</p>
+    </section>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <section class="admin-filter-card">
+        <form class="row g-2" method="get" action="/admin/metodos_pago/lista">
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="id" placeholder="ID" value="{{ filtroId }}">
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="formaPago" placeholder="Forma de pago" value="{{ filtroFormaPago }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success w-100">Filtrar</button>
+            </div>
+            <div class="col-md-2">
+                <a class="btn btn-secondary w-100" href="/admin/metodos_pago/lista">Limpiar</a>
+            </div>
+        </form>
+    </section>
+
+    <div class="admin-page-actions">
+        <a class="btn btn-primary" href="/admin/metodos_pago/crear">+ Crear nuevo</a>
+        <a class="btn btn-danger" href="/admin/metodos_pago/exportar-pdf?id={{ filtroId|default_if_none:'' }}&formaPago={{ filtroFormaPago|default_if_none:'' }}">Exportar PDF</a>
+    </div>
+
+    <section class="admin-data-card">
+        <div class="table-responsive admin-table-wrap">
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Forma de pago</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for m in metodos %}
+                <tr>
+                    <td>{{ m.id_metodo_pago }}</td>
+                    <td>{{ m.forma_pago }}</td>
+                    <td>
+                        <div class="admin-actions">
+                            <a href="/admin/metodos_pago/editar/{{ m.id_metodo_pago }}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="/admin/metodos_pago/eliminar/{{ m.id_metodo_pago }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar metodo?')">Eliminar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center">No hay metodos para mostrar.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&id={{ filtroId|default_if_none:'' }}&formaPago={{ filtroFormaPago|default_if_none:'' }}">Anterior</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                {% endif %}
+
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&id={{ filtroId|default_if_none:'' }}&formaPago={{ filtroFormaPago|default_if_none:'' }}">Siguiente</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </section>
+
+    <a class="btn btn-secondary" href="/admin/dashboard">Volver al panel</a>
+</main>
+
+</body>
+</html>

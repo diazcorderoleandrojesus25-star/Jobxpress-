@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu servicio - JobXpress</title>
+
+    <link rel="stylesheet" href="{% static 'css/prestador.css' %}">
+    <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/lucide-icons@latest/font/lucide.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="prestador-modern">
+
+<header class="navbar">
+    <div class="logo">JobXpress</div>
+    <nav class="nav-links">
+      <a href="/prestador/home">Inicio</a>
+      <a href="/prestador/servicioPrestador" class="activo">Tu servicio</a>
+      <a href="/prestador/perfil">Tu Perfil</a>
+      <a href="/prestador/ganancias">Tus ganancias</a>
+      <a href="/prestador/valoraciones">Tus valoraciones</a>
+      <a href="/prestador/agenda">Mi agenda</a>
+      <a href="/prestador/dashboard">Dashboard</a>
+
+      <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+          Cerrar sesion
+      </a>
+      <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<main class="pm-shell">
+    <section class="pm-hero">
+        <p class="pm-eyebrow">Tu servicio</p>
+        <h1>Administra tu oferta profesional</h1>
+        <p>Actualiza tu información, precios y certificaciones para transmitir confianza a tus clientes.</p>
+        <div class="pm-actions">
+            <a class="pm-btn primary" href="/prestador/agenda">Ver agenda</a>
+            <a class="pm-btn ghost" href="/prestador/valoraciones">Ver valoraciones</a>
+        </div>
+    </section>
+
+    <section class="pm-grid pm-grid-3">
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="2"></rect><path d="M9 7V5h6v2"></path><path d="M3 12h18"></path></svg></div>
+            <h3>Detalles del servicio</h3>
+            <div class="pm-chip-row">
+                {% if servicio %}
+                    <span class="pm-pill">{{ servicio.nombre }}</span>
+                    <span class="pm-pill">$ {{ servicio.precio_min }} - {{ servicio.precio_max }} COP</span>
+                    {% if servicio.categoria %}<span class="pm-pill">{{ servicio.categoria.nombre }}</span>{% endif %}
+                {% else %}
+                    <span class="pm-pill">Sin servicio</span>
+                {% endif %}
+            </div>
+            <p id="textoServicio">{% if servicio %}{{ servicio.descripcion }}{% else %}<span class="pm-empty"><span>🧰</span>No tienes servicios registrados.</span>{% endif %}</p>
+            {% if servicio %}
+            <a href="#" id="btnEditarServicio" class="pm-btn primary">Editar informacion</a>
+            {% endif %}
+        </article>
+
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M8 12l-2 9 6-3 6 3-2-9"></path></svg></div>
+            <h3>Validacion de habilidades</h3>
+            <p>Experiencia: <strong>{{ prestador.experiencia|default:"Sin registro" }}</strong></p>
+            <p>Certificado: <strong>{{ prestador.certificado_seguridad|default:"No cargado" }}</strong></p>
+            <a href="#" id="btnSubirPDF" class="pm-btn ghost">Actualizar certificados</a>
+        </article>
+
+        <article class="pm-card">
+            <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></div>
+            <h3>Desempeno y reputacion</h3>
+            <p>Valoracion promedio: <strong>{{ promedio }}/5</strong> ★</p>
+            <p>Servicios publicados: <strong>{{ servicios|length }}</strong></p>
+            <a href="/prestador/valoraciones" class="pm-btn ghost">Ver valoraciones</a>
+        </article>
+    </section>
+</main>
+
+<div class="pm-modal-backdrop" id="modalEditar">
+    <div class="pm-modal">
+        <h3>Editar descripcion del servicio</h3>
+        <textarea id="editDescripcion" rows="5"></textarea>
+        <input id="editPrecio" type="number" placeholder="Precio minimo" />
+        <input id="editPrecioMax" type="number" placeholder="Precio maximo" />
+        <a href="#" id="guardarServicio" class="pm-btn primary">Guardar</a>
+        <a href="#" class="pm-btn ghost" onclick="cerrarModal('modalEditar')">Cancelar</a>
+    </div>
+</div>
+
+<div class="pm-modal-backdrop" id="modalPDF">
+    <div class="pm-modal">
+        <h3>Subir certificado en PDF</h3>
+        <input type="file" id="archivoPDF" accept="application/pdf">
+        <a href="#" id="subirArchivo" class="pm-btn primary">Subir PDF</a>
+        <a href="#" class="pm-btn ghost" onclick="cerrarModal('modalPDF')">Cancelar</a>
+    </div>
+</div>
+
+<script>
+    function abrirModal(id) {
+        document.getElementById(id).style.display = "flex";
+    }
+
+    function cerrarModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+    const servicioId = "{% if servicio %}{{ servicio.id_servicio }}{% endif %}";
+
+    const btnEditar = document.getElementById("btnEditarServicio");
+    if (btnEditar) {
+        btnEditar.addEventListener("click", (e) => {
+            e.preventDefault();
+            const texto = document.getElementById("textoServicio").innerText;
+            document.getElementById("editDescripcion").value = texto;
+            document.getElementById("editPrecio").value = "{% if servicio %}{{ servicio.precio_min }}{% endif %}";
+            document.getElementById("editPrecioMax").value = "{% if servicio %}{{ servicio.precio_max }}{% endif %}";
+            abrirModal("modalEditar");
+        });
+    }
+
+    document.getElementById("guardarServicio").addEventListener("click", async (e) => {
+        e.preventDefault();
+        const nuevoTexto = document.getElementById("editDescripcion").value.trim();
+        const nuevoPrecio = document.getElementById("editPrecio").value.trim();
+        if (nuevoTexto.length < 10) {
+            Swal.fire('La descripcion debe tener minimo 10 caracteres.','','warning');
+            return;
+        }
+        const form = new FormData();
+        form.append("servicio_id", servicioId);
+        form.append("descripcion", nuevoTexto);
+        if (nuevoPrecio) form.append("precio_min", nuevoPrecio);
+        const nuevoPrecioMax = document.getElementById("editPrecioMax").value.trim();
+        if (nuevoPrecioMax) form.append("precio_max", nuevoPrecioMax);
+
+        const resp = await fetch("/prestador/servicio/actualizar", {
+            method: "POST",
+            body: form
+        });
+
+        if (!resp.ok) {
+            Swal.fire('Error','No se pudo guardar','error');
+            return;
+        }
+        const data = await resp.json();
+        document.getElementById("textoServicio").innerText = data.descripcion;
+        Swal.fire('Guardado','Se actualizo tu servicio','success');
+        cerrarModal("modalEditar");
+    });
+
+    document.getElementById("btnSubirPDF").addEventListener("click", (e) => {
+        e.preventDefault();
+        abrirModal("modalPDF");
+    });
+
+    document.getElementById("subirArchivo").addEventListener("click", (e) => {
+        e.preventDefault();
+        const archivo = document.getElementById("archivoPDF").files[0];
+        if (!archivo) {
+            Swal.fire('Selecciona un PDF','','warning');
+            return;
+        }
+        if (archivo.type !== "application/pdf") {
+            Swal.fire('El archivo debe ser PDF','','error');
+            return;
+        }
+        Swal.fire('Archivo subido','Se recibio tu certificado','success');
+        cerrarModal("modalPDF");
+    });
+</script>
+
+</body>
+</html>

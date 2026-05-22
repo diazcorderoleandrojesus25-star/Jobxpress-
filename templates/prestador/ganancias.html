@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{% static 'css/prestador.css' %}">
+  <link rel="stylesheet" href="{% static 'css/prestador-modern.css' %}">
+  <title>Tus ganancias - JobXpress</title>
+</head>
+<body class="prestador-modern">
+
+  <header class="navbar">
+    <div class="logo">JobXpress</div>
+
+    <nav class="nav-links">
+      <a href="/prestador/home">Inicio</a>
+      <a href="/prestador/servicioPrestador">Tu servicio</a>
+      <a href="/prestador/perfil">Tu Perfil</a>
+      <a href="/prestador/ganancias" class="activo">Tus ganancias</a>
+      <a href="/prestador/valoraciones">Tus valoraciones</a>
+      <a href="/prestador/agenda">Mi agenda</a>
+      <a href="/prestador/dashboard">Dashboard</a>
+
+      <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+          Cerrar sesion
+      </a>
+      <form id="logout-form" action="/logout" method="POST" style="display:none;">{% csrf_token %}</form>
+  </nav>
+  </header>
+
+  <main class="pm-shell">
+    <section class="pm-hero">
+      <p class="pm-eyebrow">Finanzas</p>
+      <h1>Tus ganancias</h1>
+      <p>Visualiza tu progreso, pagos recibidos y el rendimiento promedio de tus servicios.</p>
+    </section>
+
+    <section class="pm-grid pm-grid-3">
+      <article class="pm-card">
+        <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2"></rect><path d="M16 12h5"></path><circle cx="16" cy="12" r="1"></circle></svg></div>
+        <h3>Total acumulado</h3>
+        <div class="pm-stat">$ {{ total }} COP</div>
+      </article>
+      <article class="pm-card">
+        <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"></path><path d="M9 6h6"></path><path d="M9 10h6"></path><path d="M9 14h6"></path></svg></div>
+        <h3>Pagos recibidos</h3>
+        <div class="pm-stat">{{ count }}</div>
+      </article>
+      <article class="pm-card">
+        <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12V2a10 10 0 1 1-7.07 2.93"></path><path d="M12 12l7.07 7.07"></path></svg></div>
+        <h3>Promedio por pago</h3>
+        <div class="pm-stat">$ {{ promedio }} COP</div>
+      </article>
+    </section>
+
+    <section class="pm-section">
+      <h2>Historial de pagos</h2>
+      <table class="pm-table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Servicio</th>
+            <th>Fecha</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if pagos %}
+            {% for p in pagos %}
+            <tr>
+              <td>{{ p.cliente }}</td>
+              <td>{{ p.servicio }}</td>
+              <td>{{ p.fecha }}</td>
+              <td>$ {{ p.monto }} COP</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4"><div class="pm-empty"><span>💸</span>No tienes pagos registrados aun.</div></td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2025 JobXpress — Impulsando tu trabajo con confianza</p>
+  </footer>
+
+</body>
+</html>

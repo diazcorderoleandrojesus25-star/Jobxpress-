@@ -1,0 +1,158 @@
+[
+  {
+    "model": "core.servicio",
+    "pk": 1,
+    "fields": {
+      "nombre": "Plomeria residencial",
+      "descripcion": "Atencion de fugas, reparaciones e instalaciones hidraulicas para hogar y negocio.",
+      "precio_min": 50000.0,
+      "precio_max": 180000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 1
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 2,
+    "fields": {
+      "nombre": "Electricidad residencial",
+      "descripcion": "Mantenimiento, revision e instalaciones electricas con enfoque preventivo.",
+      "precio_min": 60000.0,
+      "precio_max": 220000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 2
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 3,
+    "fields": {
+      "nombre": "Carpinteria a medida",
+      "descripcion": "Fabricacion, ajuste y reparacion de muebles, puertas y estructuras en madera.",
+      "precio_min": 70000.0,
+      "precio_max": 260000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 3
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 4,
+    "fields": {
+      "nombre": "Limpieza general",
+      "descripcion": "Jornadas de limpieza integral para viviendas, oficinas y espacios comerciales.",
+      "precio_min": 45000.0,
+      "precio_max": 160000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 4
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 5,
+    "fields": {
+      "nombre": "Soporte tecnico",
+      "descripcion": "Diagnostico y solucion de fallas en computadores, redes y equipos tecnologicos.",
+      "precio_min": 50000.0,
+      "precio_max": 200000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 5
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 6,
+    "fields": {
+      "nombre": "Instalacion de equipos",
+      "descripcion": "Montaje y puesta en funcionamiento de equipos domesticos o empresariales.",
+      "precio_min": 55000.0,
+      "precio_max": 210000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 6
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 7,
+    "fields": {
+      "nombre": "Fisioterapia domiciliaria",
+      "descripcion": "Sesiones de rehabilitacion y terapia fisica con atencion personalizada.",
+      "precio_min": 80000.0,
+      "precio_max": 180000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 7
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 8,
+    "fields": {
+      "nombre": "Servicios de salud en casa",
+      "descripcion": "Acompanamiento y asistencia basica orientada al bienestar del usuario.",
+      "precio_min": 90000.0,
+      "precio_max": 250000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 8
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 9,
+    "fields": {
+      "nombre": "Tutorias y asesorias",
+      "descripcion": "Apoyo academico y profesional para refuerzo de conocimientos y proyectos.",
+      "precio_min": 40000.0,
+      "precio_max": 150000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 9
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 10,
+    "fields": {
+      "nombre": "Cuidado de mascotas",
+      "descripcion": "Atencion, acompanamiento y cuidado responsable de animales de compania.",
+      "precio_min": 35000.0,
+      "precio_max": 140000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 10
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 11,
+    "fields": {
+      "nombre": "Redaccion de contenido",
+      "descripcion": "Creacion y edicion de textos para medios digitales, academicos o corporativos.",
+      "precio_min": 50000.0,
+      "precio_max": 170000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 11
+    }
+  },
+  {
+    "model": "core.servicio",
+    "pk": 12,
+    "fields": {
+      "nombre": "Marketing digital",
+      "descripcion": "Planeacion y ejecucion de acciones para presencia digital y captacion de clientes.",
+      "precio_min": 90000.0,
+      "precio_max": 300000.0,
+      "activo": 1,
+      "prestador": null,
+      "categoria": 12
+    }
+  }
+]

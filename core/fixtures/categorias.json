@@ -1,0 +1,98 @@
+[
+  {
+    "model": "core.categoria",
+    "pk": 1,
+    "fields": {
+      "nombre": "Plomeria",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 2,
+    "fields": {
+      "nombre": "Electricidad",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 3,
+    "fields": {
+      "nombre": "Carpinteria",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 4,
+    "fields": {
+      "nombre": "Limpieza General",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 5,
+    "fields": {
+      "nombre": "Soporte Tecnico",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 6,
+    "fields": {
+      "nombre": "Instalacion de Equipos",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 7,
+    "fields": {
+      "nombre": "Fisioterapia",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 8,
+    "fields": {
+      "nombre": "Salud",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 9,
+    "fields": {
+      "nombre": "Tutorias y Asesorias",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 10,
+    "fields": {
+      "nombre": "Cuidado de Mascotas",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 11,
+    "fields": {
+      "nombre": "Redaccion de Contenido",
+      "activo": 1
+    }
+  },
+  {
+    "model": "core.categoria",
+    "pk": 12,
+    "fields": {
+      "nombre": "Marketing Digital",
+      "activo": 1
+    }
+  }
+]

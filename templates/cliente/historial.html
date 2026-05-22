@@ -1,0 +1,549 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <link href="{% static 'css/stylesplomeria.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/cliente.css' %}">
+    <title>Historial de Contrataciones | JobXpress</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+</head>
+<body class="cliente-layout-page cliente-historial-page">
+
+<header class="navbar">
+    <div class="logo">
+        <img class="logo-full" src="{% static 'images/logo_sidebar_blue.png' %}" alt="JobXpress">
+    </div>
+    <nav class="nav-links">
+        <a href="/cliente/home">Inicio</a>
+        <a href="/cliente/historial" class="active">Historial Contrataciones</a>
+        <a href="/cliente/perfil">Tu perfil</a>
+        <a href="/cliente/dashboard">Dashboard</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Cerrar sesión</a>
+        <form id="logout-form" action="/logout" method="post" style="display:none;">{% csrf_token %}</form>
+    </nav>
+</header>
+
+<div class="contenedor historial-shell">
+    <h1>Mis contrataciones</h1>
+    <p class="descripcion-pagina">
+        Aquí puedes consultar el historial de tus contrataciones, revisar los detalles del servicio,
+        el estado actual de cada solicitud y realizar ajustes cuando sea necesario.
+    </p>
+
+    <div id="historial"></div>
+
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <nav class="historial-pagination" aria-label="Paginación de contrataciones">
+        {% if page_obj.has_previous %}
+        <a class="historial-page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+            <span class="historial-page-link is-active">{{ num }}</span>
+            {% else %}
+            <a class="historial-page-link" href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a class="historial-page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</div>
+
+<!-- MODAL CALIFICAR -->
+<div id="modalCalificar" class="modal-calificar">
+    <div class="modal-card">
+        <button class="modal-close" aria-label="Cerrar" onclick="cerrarModalCalificar()">&times;</button>
+        <div class="modal-head">
+            <span class="modal-chip">Valoración</span>
+            <h3 class="modal-title">Calificar al prestador</h3>
+            <p class="modal-subtitle">Comparte tu experiencia para ayudar a otros clientes y reconocer el trabajo del prestador.</p>
+        </div>
+
+        <div class="rating-panel">
+            <div class="rating-copy">
+                <span class="rating-label">Tu puntuación</span>
+                <strong id="ratingTexto" class="rating-value">Excelente</strong>
+            </div>
+            <div id="estrellas" class="rating-stars" role="radiogroup" aria-label="Calificación del servicio">
+                <button type="button" class="star-btn" data-value="1" aria-label="1 estrella">★</button>
+                <button type="button" class="star-btn" data-value="2" aria-label="2 estrellas">★</button>
+                <button type="button" class="star-btn" data-value="3" aria-label="3 estrellas">★</button>
+                <button type="button" class="star-btn" data-value="4" aria-label="4 estrellas">★</button>
+                <button type="button" class="star-btn" data-value="5" aria-label="5 estrellas">★</button>
+            </div>
+        </div>
+
+        <label for="comentarioCalificacion" class="modal-label">Comentario</label>
+        <textarea id="comentarioCalificacion" class="modal-textarea" placeholder="Cuéntanos cómo fue el servicio, la puntualidad y la atención recibida..."></textarea>
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="guardarCalificacion()">Guardar calificación</button>
+            <button class="btn-ghost" onclick="cerrarModalCalificar()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =========================
+   Inicialización / datos
+   ========================= */
+let usuarioActual = JSON.parse(localStorage.getItem("usuarioActual")) || { nombre: "Leandro Díaz" }; 
+// Si ya en tu app guardas usuarioActual en localStorage, lo usará; si no, por defecto usa "Leandro Díaz" (tu petición).
+let historial = {{ historial_json|safe }} || [];
+const avatarUrl = "{% static 'images/usuario.png' %}";
+
+// Para compatibilidad: algunos acuerdos pueden no tener el flag prestadorAcepto.
+// Recomendación: cuando crees un acuerdo pon prestadorAcepto:false; cuando prestador acepte pon true.
+
+let calificacionID = null;
+let ratingSeleccionado = 5;
+const contenedor = document.getElementById("historial");
+const ratingLabels = {
+    1: "Muy mala",
+    2: "Regular",
+    3: "Buena",
+    4: "Muy buena",
+    5: "Excelente"
+};
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+}
+const csrfToken = getCookie("csrftoken");
+
+/* =========================
+   Estrellas dinámicas
+   ========================= */
+document.addEventListener("DOMContentLoaded", () => {
+    const div = document.getElementById("estrellas");
+    if (!div) return;
+    const botones = div.querySelectorAll(".star-btn");
+    botones.forEach(btn => {
+        btn.addEventListener("mouseenter", () => pintarEstrellas(Number(btn.dataset.value), false));
+        btn.addEventListener("click", () => {
+            ratingSeleccionado = Number(btn.dataset.value);
+            pintarEstrellas(ratingSeleccionado, true);
+        });
+    });
+    div.addEventListener("mouseleave", () => pintarEstrellas(ratingSeleccionado, true));
+    pintarEstrellas(ratingSeleccionado, true);
+});
+
+function pintarEstrellas(valor, persistente = true) {
+    const div = document.getElementById("estrellas");
+    if (!div) return;
+    const botones = div.querySelectorAll(".star-btn");
+    botones.forEach(btn => {
+        const activo = Number(btn.dataset.value) <= valor;
+        btn.classList.toggle("is-active", activo);
+        btn.setAttribute("aria-checked", activo ? "true" : "false");
+    });
+    const texto = document.getElementById("ratingTexto");
+    if (texto) texto.textContent = ratingLabels[valor] || "Excelente";
+    if (persistente) ratingSeleccionado = valor;
+}
+
+/* =========================
+   Render del historial
+   ========================= */
+function render() {
+    contenedor.innerHTML = "";
+
+    if (!historial || historial.length === 0) {
+        contenedor.innerHTML = `<div class="vacio">No tienes contrataciones aún.</div>`;
+        return;
+    }
+
+    historial.forEach(item => {
+        // Normalizar valores necesarios
+        const prestadorAcepto = !!item.prestadorAcepto; // true/false
+        const showEditar = (item.estado !== "Cancelado" && item.estado !== "Rechazado" && item.estado !== "Completada");
+        const showCancelar = (item.estado !== "Cancelado" && item.estado !== "Rechazado" && item.estado !== "Completada");
+        const showFinalizar = prestadorAcepto && (item.estado !== "Cancelado" && item.estado !== "Rechazado" && item.estado !== "Completada");
+
+        contenedor.innerHTML += `
+            <div class="card" data-id="${item.id}">
+                <img src="${item.fotoUrl || avatarUrl}" alt="avatar" width="96" height="96" class="historial-avatar">
+                <div class="info">
+                    <h3 class="historial-prestador">${item.prestador}</h3>
+                    <p><strong>Fecha:</strong> ${item.fecha}</p>
+                    <p><strong>Hora:</strong> ${item.hora}</p>
+                    <p><strong>Monto:</strong> $${item.monto} COP</p>
+                    <p><strong>Descripción:</strong> ${item.descripcion}</p>
+
+                    ${ item.calificacion ? 
+                        `<p style="margin-top:8px;"><strong>Calificación:</strong> ${"★".repeat(item.calificacion)}</p>
+                         <p><strong>Comentario:</strong> ${item.comentario || ""}</p>`
+                      : '' }
+
+                    <div class="historial-status-row">
+                       <span class="estado ${item.estado}">${item.estado}</span>
+                       ${ prestadorAcepto ? `<small class="historial-meta">(Prestador aceptó)</small>` : `<small class="historial-meta is-muted">(Prestador no ha respondido)</small>` }
+                    </div>
+                </div>
+
+                <div class="historial-actions">
+                    ${ showEditar ? `<button class="btn-editar" onclick="editar(${item.id})">Editar</button>` : '' }
+
+                    ${ showFinalizar ? `<button class="btn-editar" onclick="finalizar(${item.id})">Finalizar servicio</button>` : '' }
+
+                    ${ showCancelar ? `<button class="btn-cancelar" onclick="cancelar(${item.id})">Cancelar</button>` : `<button class="btn-disabled" disabled>--</button>` }
+
+                    ${ item.estado === "Completada" ? `<button class="btn-editar" onclick="abrirCalificacion(${item.id})">Calificar prestador</button>` : '' }
+
+                    <button class="btn-historial-delete" onclick="eliminarHistorial(${item.id})">Eliminar historial</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+/* =========================
+   EDITAR
+   ========================= */
+function editar(id) {
+    const a = historial.find(x => x.id === id);
+    if (!a) return;
+
+    Swal.fire({
+        title: "Editar contratación",
+        width: 720,
+        customClass: {
+            popup: "historial-edit-popup",
+            title: "historial-edit-title",
+            confirmButton: "historial-edit-confirm",
+            cancelButton: "historial-edit-cancel"
+        },
+        html: `
+            <div class="historial-edit-shell">
+                <p class="historial-edit-copy">Actualiza los datos del acuerdo. Si cambias la fecha o la hora, el prestador deberá confirmar nuevamente la solicitud.</p>
+                <div class="historial-edit-grid">
+                    <label class="historial-edit-field">
+                        <span>Fecha programada</span>
+                        <input type="date" id="fecha" class="swal2-input" value="${a.fecha}">
+                    </label>
+                    <label class="historial-edit-field">
+                        <span>Hora acordada</span>
+                        <input type="time" id="hora" class="swal2-input" value="${a.hora}">
+                    </label>
+                    <label class="historial-edit-field">
+                        <span>Monto (COP)</span>
+                        <input type="number" id="monto" class="swal2-input" value="${a.monto}">
+                    </label>
+                    <div class="historial-edit-badge">
+                        <strong>Estado actual</strong>
+                        <span>${a.estado}</span>
+                    </div>
+                </div>
+                <label class="historial-edit-field is-full">
+                    <span>Descripción</span>
+                    <textarea id="descripcion" class="swal2-textarea">${a.descripcion || ""}</textarea>
+                </label>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Guardar cambios",
+        cancelButtonText: "Cancelar",
+        buttonsStyling: false,
+        focusConfirm: false,
+        preConfirm: () => {
+            const payload = {
+                fecha: document.getElementById("fecha").value,
+                hora: document.getElementById("hora").value,
+                monto: document.getElementById("monto").value,
+                descripcion: document.getElementById("descripcion").value.trim()
+            };
+
+            if (!payload.fecha || !payload.hora) {
+                Swal.showValidationMessage("Debes indicar fecha y hora.");
+                return false;
+            }
+
+            return fetch(`/contrataciones/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async (response) => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.error || "No se pudo actualizar");
+                }
+                return data;
+            })
+            .catch((error) => {
+                Swal.showValidationMessage(error.message || "No se pudo actualizar");
+                return false;
+            });
+        }
+    }).then(r => {
+        if (!r.isConfirmed || !r.value) return;
+
+        a.fecha = r.value.fecha || a.fecha;
+        a.hora = r.value.hora || a.hora;
+        a.monto = r.value.monto || a.monto;
+        a.descripcion = r.value.descripcion || "";
+        a.estado = r.value.estado || a.estado;
+        a.prestadorAcepto = !!r.value.prestadorAcepto;
+
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: r.value.reenviada ? "Solicitud reenviada al prestador" : "Actualizado",
+            showConfirmButton: false,
+            timer: 1800
+        });
+        render();
+    });
+}
+
+function eliminarHistorial(id) {
+    const item = historial.find(x => x.id === id);
+    if (!item) return;
+
+    Swal.fire({
+        title: "¿Eliminar del historial?",
+        text: "La contratación dejará de mostrarse en tu historial, pero no se borrará para el prestador.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        buttonsStyling: false,
+        customClass: {
+            popup: "historial-edit-popup historial-confirm-popup",
+            title: "historial-edit-title",
+            confirmButton: "historial-edit-confirm historial-delete-confirm",
+            cancelButton: "historial-edit-cancel"
+        }
+    }).then((res) => {
+        if (!res.isConfirmed) return;
+
+        fetch(`/cliente/historial/${id}/eliminar`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": csrfToken
+            }
+        })
+        .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || "No se pudo eliminar");
+            }
+            return data;
+        })
+        .then(() => {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Eliminado del historial",
+                showConfirmButton: false,
+                timer: 1800
+            });
+            window.location.reload();
+        })
+        .catch((error) => {
+            Swal.fire({
+                icon: "error",
+                title: "No se pudo eliminar",
+                text: error.message || "Inténtalo nuevamente.",
+                confirmButtonColor: "#29435a"
+            });
+        });
+    });
+}
+
+/* =========================
+   CANCELAR (cliente cancela)
+   ========================= */
+function cancelar(id) {
+    const idx = historial.findIndex(x => x.id === id);
+    if (idx === -1) return;
+
+    Swal.fire({
+        title: "¿Cancelar este acuerdo?",
+        text: "La acción no se podrá deshacer fácilmente.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Sí, cancelar"
+    }).then(res => {
+        if (res.isConfirmed) {
+            historial[idx].estado = "Cancelado";
+            // opcional: también marcar prestadorAcepto false o dejar como estaba
+            
+            Swal.fire({ icon:"success", title:"Cancelado", confirmButtonColor:"#2d6cdf" });
+            render();
+        }
+    });
+}
+
+/* =========================
+   FINALIZAR (cliente finaliza)
+   ========================= */
+function finalizar(id) {
+    const idx = historial.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    const item = historial[idx];
+
+    // Solo permitir finalizar si ya llegó la fecha y hora pactadas
+    if (item.fecha && item.hora) {
+        const ahora = new Date();
+        const fechaHora = new Date(`${item.fecha}T${item.hora}`);
+        if (isNaN(fechaHora.getTime())) {
+            Swal.fire({ icon:"info", title:"Fecha u hora inválida", confirmButtonColor:"#2d6cdf" });
+            return;
+        }
+        if (ahora < fechaHora) {
+            Swal.fire({
+                icon: "info",
+                title: "Aún no puedes finalizar",
+                text: `Podrás finalizar a partir de ${item.fecha} ${item.hora}.`,
+                confirmButtonColor: "#2d6cdf"
+            });
+            return;
+        }
+    } else {
+        Swal.fire({
+            icon: "info",
+            title: "Sin fecha u hora",
+            text: "No se puede finalizar sin fecha y hora programadas.",
+            confirmButtonColor: "#2d6cdf"
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: "¿Marcar como finalizado?",
+        text: "Esto habilitará la calificación del prestador.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#2d6cdf",
+        confirmButtonText: "Sí, finalizar"
+    }).then(res => {
+        if (!res.isConfirmed) return;
+
+        fetch(`/contrataciones/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ estado: "Completada" })
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok }) => {
+            if (!ok) {
+                Swal.fire({ icon:"error", title:"No se pudo finalizar", confirmButtonColor:"#2d6cdf" });
+                return;
+            }
+            historial[idx].estado = "Completada";
+            Swal.fire({ icon:"success", title:"Servicio finalizado", confirmButtonColor:"#2d6cdf" });
+            render();
+        })
+        .catch(() => Swal.fire({ icon:"error", title:"Error de conexión", confirmButtonColor:"#2d6cdf" }));
+    });
+}
+
+/* =========================
+   CALIFICAR
+   ========================= */
+function abrirCalificacion(id) {
+    const a = historial.find(x => x.id === id);
+    if (!a) return;
+
+    // Solo permitir abrir el modal si estado es Completada
+    if (a.estado !== "Completada") {
+        Swal.fire({ icon:"info", title:"Solo se puede calificar cuando el servicio está completado." });
+        return;
+    }
+
+    calificacionID = id;
+    document.getElementById("comentarioCalificacion").value = a.comentario || "";
+    ratingSeleccionado = a.calificacion || 5;
+
+    pintarEstrellas(ratingSeleccionado, true);
+
+    document.getElementById("modalCalificar").style.display = "flex";
+}
+
+function guardarCalificacion() {
+    const comentario = document.getElementById("comentarioCalificacion").value.trim();
+    const a = historial.find(x => x.id === calificacionID);
+    if (!a) return;
+
+    const payload = {
+        puntuacion: ratingSeleccionado,
+        comentario: comentario,
+        idContratacion: a.id,
+        idPrestador: a.prestadorId
+    };
+
+    const isUpdate = !!a.calificacionId;
+    const url = isUpdate ? `/calificaciones/${a.calificacionId}` : "/calificaciones";
+    const method = isUpdate ? "PUT" : "POST";
+
+    fetch(url, {
+        method,
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        if (!ok) {
+            Swal.fire({ icon:"error", title:"No se pudo guardar", confirmButtonColor:"#2d6cdf" });
+            return;
+        }
+
+        a.calificacion = ratingSeleccionado;
+        a.comentario = comentario;
+        if (!a.calificacionId && data && data.idCalificacion) {
+            a.calificacionId = data.idCalificacion;
+        }
+
+        document.getElementById("modalCalificar").style.display = "none";
+        Swal.fire({ icon:"success", title:"¡Calificación guardada!", confirmButtonColor:"#2d6cdf" });
+        render();
+    })
+    .catch(() => Swal.fire({ icon:"error", title:"Error de conexión", confirmButtonColor:"#2d6cdf" }));
+}
+function cerrarModalCalificar(){
+    document.getElementById("modalCalificar").style.display = "none";
+}
+
+/* =========================
+   Inicializar render
+   ========================= */
+render();
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

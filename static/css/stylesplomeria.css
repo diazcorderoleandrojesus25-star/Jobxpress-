@@ -1,0 +1,385 @@
+/* ================================
+   JOBXPRESS - PLOMERÍA (Versión con estilo base limpio y animado)
+   ================================ */
+
+/* Fuente moderna */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* ===== VARIABLES ===== */
+:root {
+  --color1: #e3f2f1;
+  --color2: #b8d8d8;
+  --color3: #7a9e9f;
+  --color4: #4f6367;
+  --color5: #364958;
+  --text-dark: #222;
+  --text-light: #f9f9f9;
+  --radius: 15px;
+  --transition: all 0.3s ease-in-out;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== RESETEO ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== BODY ===== */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--color2);
+  color: var(--color5);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  background: var(--color5);
+  color: var(--text-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2.5rem;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  animation: slideDown 0.8s ease forwards;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-60px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.logo h4 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color1);
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+  border-radius: 25px;
+  padding: 0.5rem 1rem;
+}
+
+.nav-links a:hover {
+  background: #29B6F6;
+  color: var(--color5);
+  transform: translateY(-3px);
+}
+
+
+/* ============================
+   CARD HISTORIAL PROFESIONAL
+   ============================ */
+.card {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  
+  background: rgba(255,255,255,0.9);
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(41,182,246,0.28);
+
+  box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+  position: relative;
+  overflow: hidden;
+
+  cursor: pointer;
+  transition: all .45s cubic-bezier(0.68,-0.55,0.265,1.55);
+
+  opacity: 0;
+  transform: translateY(40px);
+  animation: cardFadeUp 0.85s ease-out forwards;
+}
+
+/* Animación cuando aparece */
+@keyframes cardFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efecto hover futurista */
+.card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 15px 45px rgba(41,182,246,.35);
+  border-color: #29B6F6;
+}
+
+/* Efecto shimmer glass */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 120%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(41,182,246,0.10),
+    transparent
+  );
+  transition: .9s ease;
+}
+
+.card:hover::before {
+  left: 120%;
+}
+
+/* Títulos y textos */
+.card h3 {
+  color: #0277BD !important;
+  font-size: 1.3rem;
+  margin-bottom: 6px;
+}
+
+.card p {
+  margin: 2px 0;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+/* Avatar */
+.card img {
+  border-radius: 50%;
+  border:4px solid #29B6F6;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+}
+
+/* Columna derecha (botones) */
+.card .acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Estados */
+.estado {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+  font-size: .85rem;
+}
+
+.estado.Pendiente { background:#fff3cd; color:#856404; }
+.estado.Completada { background:#d4edda; color:#155724; }
+.estado.Cancelado { background:#f8d7da; color:#721c24; }
+.estado.Rechazado { background:#f5c6cb; color:#721c24; }
+
+/* Botones */
+.btn-editar {
+  background:#e1f3ff;
+  border:0;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  color:#0277bd;
+  font-weight:600;
+  transition: all .3s ease;
+}
+.btn-editar:hover {
+  background:#bfe7ff;
+  transform: scale(1.05);
+}
+
+.btn-cancelar {
+  background:#ffd6d6;
+  border:0;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  color:#c0392b;
+  font-weight:600;
+  transition: all .3s ease;
+}
+.btn-cancelar:hover {
+  background:#ffb8b8;
+  transform: scale(1.05);
+}
+
+.btn-disabled {
+  background:#eee;
+  padding:8px 14px;
+  border-radius:8px;
+  color:#999;
+  border:0;
+}
+
+/* Responsive */
+@media(max-width:768px){
+  .card {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+  .acciones {
+    align-items: center !important;
+  }
+}
+
+/* ===== CONTENIDO PRINCIPAL ===== */
+.contenedor {
+  max-width: 1200px;
+  margin: 3rem auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.contenedor h1 {
+  color: var(--color5);
+  font-size: 2.3rem;
+  margin-bottom: 1rem;
+}
+
+.contenedor p {
+  color: var(--color4);
+  font-size: 1.1rem;
+  margin-bottom: 0rem;
+}
+
+/* ===== TARJETAS DE PRESTADORES ===== */
+.tarjetas-usuarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  padding: 0 1rem;
+  align-items: stretch;
+}
+
+/* Tarjeta */
+.usuario {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  text-align: center;
+  padding: 1.8rem 1.4rem;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  border: 1px solid rgba(97, 173, 160, 0.2);
+}
+
+.usuario:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Imagen */
+.usuario img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  border: 3px solid var(--color3);
+  transition: transform 0.3s ease;
+}
+
+.usuario img:hover {
+  transform: scale(1.05);
+}
+
+/* Texto */
+.usuario h3 {
+  font-size: 1.3rem;
+  color: var(--color4);
+  margin-bottom: 0.6rem;
+}
+
+.usuario p {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  text-align: justify;
+  min-height: 100px;
+}
+
+/* ===== BOTÓN ===== */
+
+/* Hace que el <a> no rompa el alineado */
+.usuario a {
+  width: 100%;
+  display: block;
+  margin-top: auto;
+  text-align: center;
+}
+
+/* Estilo del botón */
+.usuario button {
+  background: var(--color4);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.6rem;
+  border-radius: 25px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+.usuario button:hover {
+  background: var(--color3);
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(36, 143, 141, 0.3);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  background: var(--color5);
+  color: var(--text-light);
+  text-align: center;
+  padding: 2rem;
+  margin-top: 4rem;
+}
+
+footer p {
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .usuario {
+    padding: 1.5rem;
+  }
+}
