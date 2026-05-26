@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .views import ping
 
 
 urlpatterns = [
@@ -96,4 +97,5 @@ urlpatterns = [
     path("calificaciones/<int:id>", views.api_calificaciones_detail, name="api_calificaciones_detail"),
     path("contrataciones", views.api_contrataciones, name="api_contrataciones"),
     path("contrataciones/<int:id>", views.api_contrataciones_detail, name="api_contrataciones_detail"),
+    path("ping/", ping, name="ping"),
 ]
