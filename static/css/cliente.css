@@ -2650,6 +2650,32 @@ body > main.contenedor .usuario h3 {
   text-align: center;
 }
 
+body > main.contenedor .usuario .provider-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: fit-content;
+  margin: -0.25rem auto 0;
+  padding: 0.42rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(255, 193, 7, 0.13);
+  color: #4f3b00;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+body > main.contenedor .usuario .provider-rating-stars {
+  color: #f2a900;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+body > main.contenedor .usuario .provider-rating-muted {
+  color: #6c7883;
+  font-weight: 600;
+}
+
 body > main.contenedor .usuario p {
   margin: 0 !important;
   min-height: 0 !important;

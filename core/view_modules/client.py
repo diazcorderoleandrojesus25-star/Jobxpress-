@@ -308,6 +308,14 @@ def cliente_servicio_page(request, page):
         if _s.prestador and _s.prestador not in prestadores_db:
             prestadores_db.append(_s.prestador)
 
+    prestador_ids = [p.id_prestador for p in prestadores_db]
+    calificaciones = {
+        row["prestador_id"]: row
+        for row in Calificacion.objects.filter(prestador_id__in=prestador_ids)
+        .values("prestador_id")
+        .annotate(promedio=Avg("puntuacion"), total=Count("id_calificacion"))
+    }
+
     for _p in prestadores_db:
         tel = (_p.usuario.telefono or "") if getattr(_p, "usuario", None) else ""
         digits = "".join([c for c in tel if c.isdigit()])
@@ -315,6 +323,10 @@ def cliente_servicio_page(request, page):
             digits = "57" + digits
         _p.whatsapp = digits
         _p.foto_url = _media_url(getattr(getattr(_p, "usuario", None), "foto_perfil", None))
+        rating = calificaciones.get(_p.id_prestador, {})
+        promedio = rating.get("promedio") or 0
+        _p.promedio_calificacion = round(promedio, 1) if promedio else 0
+        _p.total_calificaciones = rating.get("total") or 0
 
 
     return render(
