@@ -165,13 +165,10 @@ def registro_view(request):
             .first()
         )
         if servicio_sel and servicio_sel.categoria:
-            from django.db import connection
-
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "INSERT IGNORE INTO prestador_categoria (id_prestador, id_categoria) VALUES (%s, %s)",
-                    [prestador.id_prestador, servicio_sel.categoria.id_categoria],
-                )
+            PrestadorCategoria.objects.get_or_create(
+                prestador=prestador,
+                categoria=servicio_sel.categoria,
+            )
 
             Servicio.objects.create(
                 nombre=servicio_sel.nombre,
@@ -251,10 +248,6 @@ def forgot_view(request):
                 <p style="margin:8px 0 0; font-size:14px; line-height:1.7; color:#6b7785;">
                     Si no solicitaste este cambio, puedes ignorar este mensaje sin hacer ninguna accion.
                 </p>
-                <div style="margin:24px 0 0; padding:16px 18px; border-radius:16px; background:#f8fbfb; border:1px solid rgba(111,156,149,0.18); text-align:left;">
-                    <p style="margin:0 0 8px; font-size:13px; color:#5f6f7d;"><strong>Enlace directo:</strong></p>
-                    <p style="margin:0; word-break:break-all; font-size:13px; color:#29435a;">{reset_url}</p>
-                </div>
             </div>
             <div style="padding:16px 22px 22px; border-top:1px solid rgba(111,156,149,0.16); text-align:center; background:#fcfaf6;">
                 <p style="margin:0; font-size:12px; line-height:1.6; color:#8a94a1;">

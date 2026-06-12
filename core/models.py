@@ -6,7 +6,6 @@ class Rol(models.Model):
     rol = models.CharField(max_length=255, unique=True, db_column="rol")
 
     class Meta:
-        managed = False
         db_table = "rol"
 
     def __str__(self) -> str:
@@ -29,7 +28,6 @@ class Usuario(models.Model):
     rol = models.ForeignKey(Rol, on_delete=models.PROTECT, db_column="id_rol")
 
     class Meta:
-        managed = False
         db_table = "usuarios"
 
     def __str__(self) -> str:
@@ -44,7 +42,6 @@ class Prestador(models.Model):
     horario_atencion = models.CharField(max_length=255, null=True, blank=True, db_column="horario_atencion")
 
     class Meta:
-        managed = False
         db_table = "prestadores"
 
     def __str__(self) -> str:
@@ -57,7 +54,6 @@ class Categoria(models.Model):
     activo = models.IntegerField(default=1, db_column="activo")
 
     class Meta:
-        managed = False
         db_table = "categoria"
 
     def __str__(self) -> str:
@@ -69,7 +65,6 @@ class PrestadorCategoria(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, db_column="id_categoria")
 
     class Meta:
-        managed = False
         db_table = "prestador_categoria"
         unique_together = (("prestador", "categoria"),)
 
@@ -91,7 +86,6 @@ class Servicio(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, db_column="id_categoria")
 
     class Meta:
-        managed = False
         db_table = "servicio"
 
     def __str__(self) -> str:
@@ -108,7 +102,6 @@ class Contratacion(models.Model):
     servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT, db_column="id_servicio")
 
     class Meta:
-        managed = False
         db_table = "contratacion"
 
 
@@ -117,7 +110,6 @@ class MetodoPago(models.Model):
     forma_pago = models.CharField(max_length=255, db_column="forma_pago")
 
     class Meta:
-        managed = False
         db_table = "metodos_pago"
 
     def __str__(self) -> str:
@@ -132,7 +124,6 @@ class Pago(models.Model):
     metodo = models.ForeignKey(MetodoPago, on_delete=models.PROTECT, db_column="id_metodo_pago")
 
     class Meta:
-        managed = False
         db_table = "pago"
 
 
@@ -144,7 +135,6 @@ class Calificacion(models.Model):
     prestador = models.ForeignKey(Prestador, on_delete=models.PROTECT, db_column="id_prestador")
 
     class Meta:
-        managed = False
         db_table = "calificacion"
 
 
@@ -158,7 +148,6 @@ class ClienteContratacion(models.Model):
     )
 
     class Meta:
-        managed = False
         db_table = "cliente_contratacion"
         unique_together = (("cliente", "contratacion"),)
 
@@ -173,7 +162,6 @@ class ClienteCalificacion(models.Model):
     )
 
     class Meta:
-        managed = False
         db_table = "cliente_calificacion"
         unique_together = (("cliente", "calificacion"),)
 
@@ -185,7 +173,6 @@ class PasswordResetToken(models.Model):
     expiration = models.DateTimeField()
 
     class Meta:
-        managed = False
         db_table = "password_reset_token"
 
     def is_expired(self) -> bool:

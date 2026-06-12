@@ -124,7 +124,7 @@ def cliente_dashboard(request):
     pagos = Pago.objects.filter(contratacion_id__in=link_ids)
     gasto_map: dict[str, float] = {}
     for p in pagos:
-        fecha = p.fecha_pago
+        fecha = p.fecha
         if not fecha:
             continue
         key = f"{fecha.year}-{fecha.month:02d}"
