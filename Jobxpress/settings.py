@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, unquote, urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -46,6 +47,66 @@ def required_env(name: str) -> str:
     return value
 
 
+def required_first_env(*names: str) -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value
+    raise ImproperlyConfigured(f"Configura una de estas variables: {', '.join(names)}.")
+
+
+def database_from_url(url: str) -> dict[str, object]:
+    parsed = urlparse(url)
+    engines = {
+        "postgres": "django.db.backends.postgresql",
+        "postgresql": "django.db.backends.postgresql",
+        "mysql": "django.db.backends.mysql",
+        "sqlite": "django.db.backends.sqlite3",
+    }
+
+    if parsed.scheme not in engines:
+        raise ImproperlyConfigured(f"DATABASE_URL usa un motor no soportado: {parsed.scheme}.")
+
+    if parsed.scheme == "sqlite":
+        return {
+            "ENGINE": engines[parsed.scheme],
+            "NAME": parsed.path.lstrip("/") or BASE_DIR / "db.sqlite3",
+        }
+
+    config = {
+        "ENGINE": engines[parsed.scheme],
+        "NAME": unquote(parsed.path.lstrip("/")),
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
+        "HOST": parsed.hostname or "",
+        "PORT": str(parsed.port or ""),
+    }
+
+    options = dict(parse_qsl(parsed.query))
+    if options:
+        config["OPTIONS"] = options
+
+    return config
+
+
+def env_or_pg(name: str, pg_name: str, default=None) -> str:
+    value = os.getenv(name)
+    if value and value not in {"localhost", "127.0.0.1"}:
+        return value
+
+    pg_value = os.getenv(pg_name)
+    if pg_value:
+        return pg_value
+
+    if value:
+        return value
+
+    if default is not None:
+        return default
+
+    raise ImproperlyConfigured(f"Configura {name} o {pg_name}.")
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -56,7 +117,23 @@ SECRET_KEY = required_env("SECRET_KEY")
 DEBUG = env_bool("DEBUG", False)
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
+RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+if RAILWAY_PUBLIC_DOMAIN and RAILWAY_PUBLIC_DOMAIN not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+if RAILWAY_PUBLIC_DOMAIN:
+    railway_origin = f"https://{RAILWAY_PUBLIC_DOMAIN}"
+    if railway_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(railway_origin)
+if not CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{host}"
+        for host in ALLOWED_HOSTS
+        if host not in {"*", "localhost", "127.0.0.1"} and not host.startswith(".")
+    ]
 
 
 # Application definition
@@ -73,6 +150,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'core.middleware.SessionUserMiddleware',
@@ -105,16 +183,30 @@ WSGI_APPLICATION = 'Jobxpress.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': required_env('DB_NAME'),
-        'USER': required_env('DB_USER'),
-        'PASSWORD': required_env('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+if os.getenv("DATABASE_URL"):
+    DATABASES = {"default": database_from_url(required_env("DATABASE_URL"))}
+elif os.getenv("DB_NAME") or os.getenv("PGDATABASE"):
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': required_first_env('DB_NAME', 'PGDATABASE'),
+            'USER': required_first_env('DB_USER', 'PGUSER'),
+            'PASSWORD': required_first_env('DB_PASSWORD', 'PGPASSWORD'),
+            'HOST': env_or_pg('DB_HOST', 'PGHOST', 'localhost'),
+            'PORT': env_or_pg('DB_PORT', 'PGPORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': required_first_env('PGDATABASE', 'DB_NAME'),
+            'USER': required_first_env('PGUSER', 'DB_USER'),
+            'PASSWORD': required_first_env('PGPASSWORD', 'DB_PASSWORD'),
+            'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST') or 'localhost',
+            'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT') or '5432',
+        }
+    }
 
 
 # Password validation
@@ -172,10 +264,13 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 #api de google maps
 GOOGLE_MAPS_API_KEY = required_env('GOOGLE_MAPS_API_KEY')
 
-SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
-SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", False)
-CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", False)
-SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", not DEBUG)
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", not DEBUG)
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", not DEBUG)
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000" if not DEBUG else "0"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
 SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
 
