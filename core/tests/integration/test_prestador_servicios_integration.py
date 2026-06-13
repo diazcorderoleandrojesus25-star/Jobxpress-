@@ -53,10 +53,12 @@ class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
                 "prestador_hora_fin": "05:00 PM",
                 "prestador_descripcion": "Tecnico con experiencia en reparaciones.",
             },
+            secure=True,
+            follow=True,
         )
 
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "/login?registro_ok")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Prestador.objects.filter(usuario__email="pedro.nuevo@jobxpress.com").exists())
         self.assertEqual(Servicio.objects.count(), total_antes)
 
         prestador = Prestador.objects.get(usuario__email="pedro.nuevo@jobxpress.com")
@@ -93,7 +95,37 @@ class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
         session["usuario_id"] = usuario.id_usuario
         session.save()
 
-        response = self.client.get("/prestador/home")
+        response = self.client.get("/prestador/home", secure=True, follow=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Servicio.objects.count(), total_antes)
+
+    def test_servicioprestador_no_inventa_servicio_para_prestador_nuevo(self):
+        usuario = Usuario.objects.create(
+            nombre="Laura",
+            apellido="Prestadora",
+            email="laura.prestadora@jobxpress.com",
+            telefono="3012223344",
+            contrasena=_hash_password("Prestador123!"),
+            direccion="Carrera 12 # 7-40",
+            activo=1,
+            rol=self.rol_prestador,
+            created_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        prestador = Prestador.objects.create(
+            usuario=usuario,
+            descripcion="Tecnica con experiencia",
+            dias_atencion="Lun, Mar",
+            horario_atencion="08:00 AM - 05:00 PM",
+        )
+        PrestadorCategoria.objects.create(prestador=prestador, categoria=self.categoria)
+
+        session = self.client.session
+        session["usuario_id"] = usuario.id_usuario
+        session.save()
+
+        response = self.client.get("/prestador/servicioPrestador", secure=True, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No tienes servicios registrados.")

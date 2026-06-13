@@ -127,21 +127,11 @@ def _get_or_create_prestador_services(prestador):
     if not prestador:
         return Servicio.objects.none()
 
+    # Solo devolvemos servicios que realmente pertenecen al prestador.
+    # Antes se hacía un fallback por categoría y eso hacía parecer que
+    # se creaban servicios nuevos al registrar un prestador.
     servicios = Servicio.objects.filter(prestador=prestador).select_related("categoria")
-    if servicios.exists():
-        return servicios
-
-    categoria_ids = list(
-        PrestadorCategoria.objects.filter(prestador=prestador).values_list("categoria_id", flat=True)
-    )
-    if not categoria_ids:
-        return servicios
-
-    return (
-        Servicio.objects.filter(activo=1, categoria_id__in=categoria_ids, prestador__isnull=True)
-        .select_related("categoria")
-        .order_by("categoria__nombre", "nombre")
-    )
+    return servicios
 
 
 def _role_required(role: str):
