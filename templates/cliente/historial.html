@@ -165,10 +165,22 @@ function render() {
 
     historial.forEach(item => {
         // Normalizar valores necesarios
-        const prestadorAcepto = !!item.prestadorAcepto; // true/false
+        const respuestaPrestador = (item.respuestaPrestador || (item.prestadorAcepto ? "aceptado" : "pendiente")).toLowerCase();
+        const prestadorAcepto = respuestaPrestador === "aceptado"; // true/false
+        const prestadorRespondio = respuestaPrestador !== "pendiente" && respuestaPrestador !== "cancelado";
         const showEditar = (item.estado !== "Cancelado" && item.estado !== "Rechazado" && item.estado !== "Completada");
         const showCancelar = (item.estado !== "Cancelado" && item.estado !== "Rechazado" && item.estado !== "Completada");
         const showFinalizar = prestadorAcepto && (item.estado !== "Cancelado" && item.estado !== "Rechazado" && item.estado !== "Completada");
+        let estadoRespuesta = "(Prestador no ha respondido)";
+        if (respuestaPrestador === "aceptado") {
+            estadoRespuesta = "(Prestador aceptó)";
+        } else if (respuestaPrestador === "rechazado") {
+            estadoRespuesta = "(Prestador respondió y rechazó)";
+        } else if (respuestaPrestador === "cancelado") {
+            estadoRespuesta = "(Solicitud cancelada)";
+        } else if (prestadorRespondio) {
+            estadoRespuesta = "(Prestador respondió)";
+        }
 
         contenedor.innerHTML += `
             <div class="card" data-id="${item.id}">
@@ -187,7 +199,7 @@ function render() {
 
                     <div class="historial-status-row">
                        <span class="estado ${item.estado}">${item.estado}</span>
-                       ${ prestadorAcepto ? `<small class="historial-meta">(Prestador aceptó)</small>` : `<small class="historial-meta is-muted">(Prestador no ha respondido)</small>` }
+                       <small class="historial-meta ${prestadorRespondio ? "" : "is-muted"}">${estadoRespuesta}</small>
                     </div>
                 </div>
 
@@ -297,6 +309,8 @@ function editar(id) {
         a.descripcion = r.value.descripcion || "";
         a.estado = r.value.estado || a.estado;
         a.prestadorAcepto = !!r.value.prestadorAcepto;
+        a.respuestaPrestador = r.value.respuestaPrestador || a.respuestaPrestador;
+        a.prestadorRespondio = !!r.value.prestadorRespondio;
 
         Swal.fire({
             toast: true,

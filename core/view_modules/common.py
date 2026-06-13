@@ -231,4 +231,17 @@ def _apply_auto_contratacion_estado(contratacion: Contratacion, now=None):
     return contratacion.estado or estado_actual
 
 
+def _get_prestador_respuesta_estado(estado: str | None) -> str:
+    estado_low = (estado or "").strip().lower()
+    if not estado_low or "pend" in estado_low:
+        return "pendiente"
+    if "cancel" in estado_low:
+        return "cancelado"
+    if "rechaz" in estado_low:
+        return "rechazado"
+    if any(word in estado_low for word in ["confirm", "acept", "proceso", "activo", "complet", "final", "termin"]):
+        return "aceptado"
+    return "respondio"
+
+
 __all__ = [name for name in globals() if not name.startswith("__")]

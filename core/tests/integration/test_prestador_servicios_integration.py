@@ -68,6 +68,16 @@ class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
                 categoria=self.categoria,
             ).exists()
         )
+        self.assertTrue(Servicio.objects.filter(prestador=prestador, id_servicio=self.servicio.id_servicio).exists())
+
+        session = self.client.session
+        session["usuario_id"] = prestador.usuario.id_usuario
+        session.save()
+
+        servicio_page = self.client.get("/prestador/servicioPrestador", secure=True, follow=True)
+        self.assertEqual(servicio_page.status_code, 200)
+        self.assertContains(servicio_page, self.servicio.nombre)
+        self.assertNotContains(servicio_page, "No tienes servicios registrados.")
 
     def test_prestador_home_no_crea_servicio_duplicado(self):
         usuario = Usuario.objects.create(

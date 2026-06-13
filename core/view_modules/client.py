@@ -191,11 +191,9 @@ def cliente_historial(request):
             prestador_name = f"{c.prestador.usuario.nombre} {c.prestador.usuario.apellido}"
 
         estado = c.estado or ""
-        estado_low = estado.lower()
-        prestador_acepto = (
-            any(k in estado_low for k in ["confirm", "acept", "complet", "final", "proceso", "activo"])
-            and "rechaz" not in estado_low
-        )
+        respuesta_prestador = _get_prestador_respuesta_estado(estado)
+        prestador_acepto = respuesta_prestador == "aceptado"
+        prestador_respondio = respuesta_prestador not in ("pendiente", "")
 
         calif = calif_map.get(c.id_contratacion)
         historial.append({
@@ -208,7 +206,9 @@ def cliente_historial(request):
             "monto": obs.get("monto", ""),
             "descripcion": obs.get("descripcion", ""),
             "estado": estado or "Pendiente",
+            "respuestaPrestador": respuesta_prestador,
             "prestadorAcepto": prestador_acepto,
+            "prestadorRespondio": prestador_respondio,
             "calificacionId": calif.id_calificacion if calif else None,
             "calificacion": calif.puntuacion if calif else None,
             "comentario": calif.comentario if calif else "",

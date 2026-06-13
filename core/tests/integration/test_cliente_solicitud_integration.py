@@ -89,6 +89,7 @@ class ClienteSolicitudIntegrationTestCase(TransactionTestCase):
             "/cliente/solicitud",
             data=json.dumps(payload),
             content_type="application/json",
+            secure=True,
         )
 
         self.assertEqual(response.status_code, 201)
@@ -112,3 +113,19 @@ class ClienteSolicitudIntegrationTestCase(TransactionTestCase):
                 contratacion=contratacion,
             ).exists()
         )
+
+    def test_cliente_historial_muestra_rechazo_como_respuesta_real(self):
+        contratacion = Contratacion.objects.create(
+            fecha=date.today(),
+            fecha_solicitud=date.today(),
+            estado="Rechazado",
+            observacion='{"hora":"10:30","monto":"85000","direccion":"Calle 80 # 10-20","descripcion":"Revisar una fuga en cocina"}',
+            prestador=self.prestador,
+            servicio=self.servicio,
+        )
+        ClienteContratacion.objects.create(cliente=self.cliente, contratacion=contratacion)
+
+        response = self.client.get("/cliente/historial", secure=True, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '"respuestaPrestador": "rechazado"')

@@ -355,7 +355,7 @@ def api_contrataciones_detail(request, id):
             ensure_ascii=False,
         )
         contratacion.save(update_fields=["fecha", "estado", "observacion"])
-        estado_low = (contratacion.estado or "").lower()
+        respuesta_prestador = _get_prestador_respuesta_estado(contratacion.estado)
         return JsonResponse(
             {
                 "idContratacion": contratacion.id_contratacion,
@@ -364,10 +364,9 @@ def api_contrataciones_detail(request, id):
                 "monto": monto_nuevo,
                 "descripcion": descripcion_nueva,
                 "estado": contratacion.estado,
-                "prestadorAcepto": (
-                    any(k in estado_low for k in ["confirm", "acept", "complet", "final", "proceso", "activo"])
-                    and "rechaz" not in estado_low
-                ),
+                "respuestaPrestador": respuesta_prestador,
+                "prestadorAcepto": respuesta_prestador == "aceptado",
+                "prestadorRespondio": respuesta_prestador not in ("pendiente", ""),
                 "reenviada": fecha_cambio or hora_cambio,
             }
         )
