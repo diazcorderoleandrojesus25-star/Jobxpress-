@@ -294,13 +294,13 @@ def prestador_servicio_actualizar(request):
     if servicio_id:
         servicio = Servicio.objects.filter(id_servicio=servicio_id, prestador=prestador).first()
     if servicio is None:
-        servicio = Servicio.objects.filter(prestador=prestador).first()
+        servicio = _get_or_create_prestador_services(prestador).first()
 
     if servicio is None:
         return _json_error("Servicio no encontrado", status=404)
 
     if descripcion:
-        servicio.descripcion = descripcion
+        prestador.descripcion = descripcion
     if precio_min:
         try:
             servicio.precio_min = float(precio_min)
@@ -311,12 +311,15 @@ def prestador_servicio_actualizar(request):
             servicio.precio_max = float(precio_max)
         except ValueError:
             pass
-    servicio.save()
+    if servicio.prestador_id == prestador.id_prestador:
+        servicio.save()
+    if descripcion:
+        prestador.save(update_fields=["descripcion"])
 
     return JsonResponse(
         {
             "ok": True,
-            "descripcion": servicio.descripcion,
+            "descripcion": prestador.descripcion or servicio.descripcion,
             "precio_min": servicio.precio_min,
             "precio_max": servicio.precio_max,
         }

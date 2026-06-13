@@ -55,7 +55,7 @@
                     <span class="pm-pill">Sin servicio</span>
                 {% endif %}
             </div>
-            <p id="textoServicio">{% if servicio %}{{ servicio.descripcion }}{% else %}<span class="pm-empty"><span>🧰</span>No tienes servicios registrados.</span>{% endif %}</p>
+            <p id="textoServicio">{% if servicio %}{{ prestador.descripcion|default:servicio.descripcion }}{% else %}<span class="pm-empty"><span>🧰</span>No tienes servicios registrados.</span>{% endif %}</p>
             {% if servicio %}
             <a href="#" id="btnEditarServicio" class="pm-btn primary">Editar informacion</a>
             {% endif %}

@@ -35,3 +35,9 @@ class LogoutIntegrationTestCase(TransactionTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/")
         self.assertIsNone(self.client.session.get("usuario_id"))
+
+    def test_protected_page_without_session_redirects_login(self):
+        response = self.client.get("/cliente/home")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login")

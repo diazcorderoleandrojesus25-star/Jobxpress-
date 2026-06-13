@@ -382,11 +382,26 @@ function cancelar(id) {
         confirmButtonText: "Sí, cancelar"
     }).then(res => {
         if (res.isConfirmed) {
-            historial[idx].estado = "Cancelado";
-            // opcional: también marcar prestadorAcepto false o dejar como estaba
-            
-            Swal.fire({ icon:"success", title:"Cancelado", confirmButtonColor:"#2d6cdf" });
-            render();
+            fetch(`/contrataciones/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ estado: "Cancelado" })
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) {
+                    Swal.fire({ icon:"error", title:"No se pudo cancelar", text: data.error || "", confirmButtonColor:"#2d6cdf" });
+                    return;
+                }
+                historial[idx].estado = data.estado || "Cancelado";
+                historial[idx].prestadorAcepto = false;
+                Swal.fire({ icon:"success", title:"Cancelado", confirmButtonColor:"#2d6cdf" });
+                render();
+            })
+            .catch(() => Swal.fire({ icon:"error", title:"Error de conexión", confirmButtonColor:"#2d6cdf" }));
         }
     });
 }

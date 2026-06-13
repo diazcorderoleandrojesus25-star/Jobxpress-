@@ -16,7 +16,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.core.files.storage import default_storage
-from django.db import connection
 from django.db.models import Avg, Count, Sum, Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -132,38 +131,17 @@ def _get_or_create_prestador_services(prestador):
     if servicios.exists():
         return servicios
 
-    categoria_id = None
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_categoria FROM prestador_categoria WHERE id_prestador = %s LIMIT 1",
-            [prestador.id_prestador],
-        )
-        row = cursor.fetchone()
-        if row:
-            categoria_id = row[0]
-
-    if not categoria_id:
+    categoria_ids = list(
+        PrestadorCategoria.objects.filter(prestador=prestador).values_list("categoria_id", flat=True)
+    )
+    if not categoria_ids:
         return servicios
 
-    servicio_base = (
-        Servicio.objects.filter(categoria_id=categoria_id)
-        .exclude(prestador=prestador)
-        .order_by("id_servicio")
-        .first()
+    return (
+        Servicio.objects.filter(activo=1, categoria_id__in=categoria_ids, prestador__isnull=True)
+        .select_related("categoria")
+        .order_by("categoria__nombre", "nombre")
     )
-    if not servicio_base:
-        return servicios
-
-    Servicio.objects.create(
-        nombre=servicio_base.nombre,
-        descripcion=servicio_base.descripcion,
-        precio_min=servicio_base.precio_min,
-        precio_max=servicio_base.precio_max,
-        activo=1,
-        prestador=prestador,
-        categoria=servicio_base.categoria,
-    )
-    return Servicio.objects.filter(prestador=prestador).select_related("categoria")
 
 
 def _role_required(role: str):

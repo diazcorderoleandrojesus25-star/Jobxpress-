@@ -1,0 +1,99 @@
+from django.test import TransactionTestCase
+from django.utils import timezone
+
+from core.models import (
+    Categoria,
+    Prestador,
+    PrestadorCategoria,
+    Rol,
+    Servicio,
+    Usuario,
+)
+from core.tests.integration._db_support import ensure_auth_tables, ensure_tables
+from core.view_modules.common import _hash_password
+
+
+class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        ensure_auth_tables()
+        ensure_tables(Categoria, Prestador, PrestadorCategoria, Servicio)
+
+    def setUp(self):
+        self.rol_prestador, _ = Rol.objects.get_or_create(rol="ROLE_PRESTADOR")
+        self.categoria = Categoria.objects.create(nombre="Plomeria", activo=1)
+        self.servicio = Servicio.objects.create(
+            nombre="Plomeria residencial",
+            descripcion="Reparacion de fugas",
+            precio_min=50000,
+            precio_max=120000,
+            activo=1,
+            prestador=None,
+            categoria=self.categoria,
+        )
+
+    def test_registro_prestador_no_crea_servicio_duplicado(self):
+        total_antes = Servicio.objects.count()
+
+        response = self.client.post(
+            "/registro",
+            {
+                "nombre": "Pedro",
+                "apellido": "Prestador",
+                "email": "pedro.nuevo@jobxpress.com",
+                "telefono": "3012223344",
+                "direccion": "Carrera 12 # 7-40",
+                "contrasena": "Prestador123!",
+                "contrasena_confirmation": "Prestador123!",
+                "id_rol": str(self.rol_prestador.id_rol),
+                "servicio_id": str(self.servicio.id_servicio),
+                "prestador_dias": ["Lun", "Mar"],
+                "prestador_hora_inicio": "08:00 AM",
+                "prestador_hora_fin": "05:00 PM",
+                "prestador_descripcion": "Tecnico con experiencia en reparaciones.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login?registro_ok")
+        self.assertEqual(Servicio.objects.count(), total_antes)
+
+        prestador = Prestador.objects.get(usuario__email="pedro.nuevo@jobxpress.com")
+        self.assertTrue(
+            PrestadorCategoria.objects.filter(
+                prestador=prestador,
+                categoria=self.categoria,
+            ).exists()
+        )
+
+    def test_prestador_home_no_crea_servicio_duplicado(self):
+        usuario = Usuario.objects.create(
+            nombre="Paula",
+            apellido="Prestadora",
+            email="paula.prestadora@jobxpress.com",
+            telefono="3012223344",
+            contrasena=_hash_password("Prestador123!"),
+            direccion="Carrera 12 # 7-40",
+            activo=1,
+            rol=self.rol_prestador,
+            created_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        prestador = Prestador.objects.create(
+            usuario=usuario,
+            descripcion="Tecnica con experiencia",
+            dias_atencion="Lun, Mar",
+            horario_atencion="08:00 AM - 05:00 PM",
+        )
+        PrestadorCategoria.objects.create(prestador=prestador, categoria=self.categoria)
+        total_antes = Servicio.objects.count()
+
+        session = self.client.session
+        session["usuario_id"] = usuario.id_usuario
+        session.save()
+
+        response = self.client.get("/prestador/home")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Servicio.objects.count(), total_antes)

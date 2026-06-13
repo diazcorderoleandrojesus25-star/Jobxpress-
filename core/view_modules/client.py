@@ -294,19 +294,31 @@ def cliente_servicio_page(request, page):
         servicio_id = servicio.id_servicio
         servicio_nombre = servicio.nombre
 
-    if servicio:
-        servicios_page = Servicio.objects.filter(activo=1, nombre__iexact=servicio.nombre)
-    else:
-        servicios_page = Servicio.objects.filter(activo=1)
-        if categoria:
-            servicios_page = servicios_page.filter(categoria=categoria)
-        else:
-            servicios_page = servicios_page.filter(nombre__icontains=page)
+    prestadores_map = {}
+    if categoria:
+        for _p in (
+            Prestador.objects.filter(
+                prestadorcategoria__categoria=categoria,
+                usuario__activo=1,
+            )
+            .select_related("usuario")
+            .distinct()
+        ):
+            prestadores_map[_p.id_prestador] = _p
 
-    prestadores_db = []
+    # Compatibilidad con datos antiguos donde se creo un Servicio por prestador.
+    servicios_page = Servicio.objects.filter(activo=1)
+    if servicio:
+        servicios_page = servicios_page.filter(nombre__iexact=servicio.nombre)
+    elif categoria:
+        servicios_page = servicios_page.filter(categoria=categoria)
+    else:
+        servicios_page = servicios_page.filter(nombre__icontains=page)
     for _s in servicios_page.select_related("prestador", "prestador__usuario"):
-        if _s.prestador and _s.prestador not in prestadores_db:
-            prestadores_db.append(_s.prestador)
+        if _s.prestador and getattr(_s.prestador, "usuario", None) and _s.prestador.usuario.activo:
+            prestadores_map[_s.prestador.id_prestador] = _s.prestador
+
+    prestadores_db = list(prestadores_map.values())
 
     prestador_ids = [p.id_prestador for p in prestadores_db]
     calificaciones = {
@@ -344,27 +356,32 @@ def cliente_solicitud(request):
     prestador_id = payload.get("prestador_id")
     servicio_nombre = (payload.get("servicio") or "").strip()
 
-    prestador = None
-    if prestador_id:
-        prestador = Prestador.objects.filter(id_prestador=prestador_id).first()
+    prestador = Prestador.objects.filter(id_prestador=prestador_id).first() if prestador_id else None
     if prestador is None:
-        prestador = Prestador.objects.first()
-
-    if prestador is None:
-        return _json_error("No hay prestadores disponibles", status=400)
+        return _json_error("Prestador no encontrado", status=400)
 
     servicio = None
     if payload.get("servicio_id"):
-        servicio = Servicio.objects.filter(id_servicio=payload.get("servicio_id")).first()
+        servicio = Servicio.objects.filter(id_servicio=payload.get("servicio_id"), activo=1).first()
     if servicio is None and servicio_nombre:
-        servicio = Servicio.objects.filter(nombre__icontains=servicio_nombre).first()
-    if servicio is None:
-        servicio = Servicio.objects.first()
+        servicio = (
+            Servicio.objects.filter(nombre__icontains=servicio_nombre, activo=1)
+            .filter(Q(prestador=prestador) | Q(prestador__isnull=True))
+            .order_by("prestador_id", "id_servicio")
+            .first()
+        )
 
     if servicio is None:
-        return _json_error("No hay servicios disponibles", status=400)
+        return _json_error("Servicio no encontrado", status=400)
     if getattr(servicio, "activo", 1) == 0 or getattr(servicio.categoria, "activo", 1) == 0:
         return _json_error("El servicio no esta disponible", status=400)
+    if servicio.prestador_id and servicio.prestador_id != prestador.id_prestador:
+        return _json_error("El servicio no corresponde al prestador seleccionado", status=400)
+    if not servicio.prestador_id and not PrestadorCategoria.objects.filter(
+        prestador=prestador,
+        categoria=servicio.categoria,
+    ).exists():
+        return _json_error("El prestador no ofrece este servicio", status=400)
 
     fecha = payload.get("fecha")
     hora = payload.get("hora")

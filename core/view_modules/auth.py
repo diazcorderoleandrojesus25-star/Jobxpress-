@@ -29,7 +29,7 @@ def logout_view(request):
     return redirect("/")
 
 def registro_view(request):
-    servicios = Servicio.objects.filter(activo=1).select_related("categoria")
+    servicios = Servicio.objects.filter(activo=1, prestador__isnull=True).select_related("categoria")
     if request.method == "GET":
         return render(request, "registro.html", {"servicios": servicios})
 
@@ -166,16 +166,6 @@ def registro_view(request):
         )
         if servicio_sel and servicio_sel.categoria:
             PrestadorCategoria.objects.get_or_create(
-                prestador=prestador,
-                categoria=servicio_sel.categoria,
-            )
-
-            Servicio.objects.create(
-                nombre=servicio_sel.nombre,
-                descripcion=servicio_sel.descripcion,
-                precio_min=servicio_sel.precio_min,
-                precio_max=servicio_sel.precio_max,
-                activo=1,
                 prestador=prestador,
                 categoria=servicio_sel.categoria,
             )

@@ -313,6 +313,13 @@ def api_contrataciones_detail(request, id):
 
     if request.method == "PUT":
         payload = _parse_body(request)
+        cliente = getattr(request, "usuario", None)
+        if request.rol == "ROLE_CLIENTE" and not ClienteContratacion.objects.filter(
+            cliente=cliente,
+            contratacion=contratacion,
+        ).exists():
+            return _json_error("No puedes editar esta contratacion", status=403)
+
         obs = _parse_observacion(contratacion.observacion)
 
         fecha_nueva = payload.get("fecha", contratacion.fecha.isoformat() if contratacion.fecha else "")
@@ -330,7 +337,13 @@ def api_contrataciones_detail(request, id):
         if fecha_cambio or hora_cambio:
             nuevo_estado = "Pendiente"
 
-        contratacion.fecha = fecha_nueva or None
+        if fecha_nueva:
+            try:
+                contratacion.fecha = datetime.strptime(fecha_nueva, "%Y-%m-%d").date()
+            except ValueError:
+                return _json_error("Fecha invalida", status=400)
+        else:
+            contratacion.fecha = None
         contratacion.estado = nuevo_estado
         contratacion.observacion = json.dumps(
             {
