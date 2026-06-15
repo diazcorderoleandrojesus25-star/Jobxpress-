@@ -30,8 +30,17 @@ class LoginIntegrationTestCase(TransactionTestCase):
         response = self.client.post(
             "/login",
             {"username": "cliente@jobxpress.com", "password": "Segura123!"},
+            secure=True,
         )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/cliente/home")
         self.assertEqual(self.client.session.get("usuario_id"), user.id_usuario)
+
+    def test_login_page_disables_cache_for_credentials(self):
+        response = self.client.get("/login", secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("no-store", response["Cache-Control"])
+        self.assertIn("no-cache", response["Pragma"])
+        self.assertEqual(response["Expires"], "0")

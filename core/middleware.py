@@ -24,6 +24,13 @@ PUBLIC_PREFIXES = (
     "/favicon.ico",
 )
 
+SENSITIVE_PUBLIC_PREFIXES = (
+    "/login",
+    "/registro",
+    "/forgot",
+    "/reset",
+)
+
 ROLE_PREFIXES = {
     "/cliente": "ROLE_CLIENTE",
     "/prestador": "ROLE_PRESTADOR",
@@ -72,8 +79,9 @@ class NoCacheMiddleware(MiddlewareMixin):
     def process_response(self, request, response):
         path = request.path or ""
         is_public = path == "/" or any(path == p or path.startswith(p) for p in PUBLIC_PREFIXES)
+        is_sensitive_public = any(path == p or path.startswith(p) for p in SENSITIVE_PUBLIC_PREFIXES)
 
-        if not is_public:
+        if not is_public or is_sensitive_public:
             response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, no-transform"
             response["Pragma"] = "no-cache"
             response["Expires"] = "0"

@@ -43,18 +43,18 @@
     {% endif %}
 
     <!-- ðŸŸ¢ LOGIN REAL: Spring Security usa /login -->
-    <form method="POST" action="/login">
+    <form method="POST" action="/login" autocomplete="off" novalidate>
 
         <div class="mb-3">
             <label for="email" class="form-label">Email:</label>
-            <input id="email" type="email" name="username" class="form-control" required>
+            <input id="email" type="email" name="username" class="form-control" autocomplete="off" autocapitalize="none" spellcheck="false" required>
         </div>
 
         <!-- CONTRASENA (UNICO BLOQUE MODIFICADO) -->
         <div class="mb-3">
             <label for="password" class="form-label">Contraseña:</label>
             <div class="input-group">
-                <input id="password" type="password" name="password" class="form-control" required>
+                <input id="password" type="password" name="password" class="form-control" autocomplete="new-password" required>
                 <span class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
                     <i id="eyeIcon" class="bi bi-eye"></i>
                 </span>
@@ -90,6 +90,31 @@
             eyeIcon.classList.replace("bi-eye-slash", "bi-eye");
         }
     }
+
+    function clearLoginFields() {
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+
+        if (emailInput) {
+            emailInput.value = "";
+        }
+        if (passwordInput) {
+            passwordInput.value = "";
+            passwordInput.type = "password";
+        }
+    }
+
+    window.addEventListener("pageshow", function (event) {
+        if (event.persisted) {
+            clearLoginFields();
+            return;
+        }
+
+        const navigation = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+        if (navigation && navigation.type === "back_forward") {
+            clearLoginFields();
+        }
+    });
 </script>
 
 

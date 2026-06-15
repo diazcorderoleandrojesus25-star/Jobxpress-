@@ -30,14 +30,17 @@ class LogoutIntegrationTestCase(TransactionTestCase):
         session["usuario_id"] = user.id_usuario
         session.save()
 
-        response = self.client.get("/logout")
+        response = self.client.get("/logout", secure=True)
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/")
         self.assertIsNone(self.client.session.get("usuario_id"))
+        self.assertIn("no-store", response["Cache-Control"])
+        self.assertIn("no-cache", response["Pragma"])
+        self.assertEqual(response["Expires"], "0")
 
     def test_protected_page_without_session_redirects_login(self):
-        response = self.client.get("/cliente/home")
+        response = self.client.get("/cliente/home", secure=True)
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login")
