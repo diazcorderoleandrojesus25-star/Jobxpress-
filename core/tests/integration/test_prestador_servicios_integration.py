@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from django.test import TransactionTestCase
 from django.utils import timezone
 
 from core.models import (
     Categoria,
+    Contratacion,
     Prestador,
     PrestadorCategoria,
     Rol,
@@ -109,6 +112,74 @@ class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Servicio.objects.count(), total_antes)
+
+    def test_prestador_home_no_muestra_citas_rechazadas(self):
+        usuario = Usuario.objects.create(
+            nombre="Paula",
+            apellido="Prestadora",
+            email="paula.citas@jobxpress.com",
+            telefono="3012223344",
+            contrasena=_hash_password("Prestador123!"),
+            direccion="Carrera 12 # 7-40",
+            activo=1,
+            rol=self.rol_prestador,
+            created_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        prestador = Prestador.objects.create(
+            usuario=usuario,
+            descripcion="Tecnica con experiencia",
+            dias_atencion="Lun, Mar",
+            horario_atencion="08:00 AM - 05:00 PM",
+        )
+
+        categoria_extra = Categoria.objects.create(nombre="Electricidad", activo=1)
+        servicio_confirmado = Servicio.objects.create(
+            nombre="Servicio confirmado",
+            descripcion="Instalacion y reparacion",
+            precio_min=80000,
+            precio_max=150000,
+            activo=1,
+            prestador=prestador,
+            categoria=categoria_extra,
+        )
+        servicio_rechazado = Servicio.objects.create(
+            nombre="Servicio rechazado",
+            descripcion="Mantenimiento y revisiones",
+            precio_min=60000,
+            precio_max=120000,
+            activo=1,
+            prestador=prestador,
+            categoria=self.categoria,
+        )
+
+        fecha = timezone.now().date() + timedelta(days=3)
+        Contratacion.objects.create(
+            fecha=fecha,
+            fecha_solicitud=timezone.now().date(),
+            estado="Confirmado",
+            observacion="{}",
+            prestador=prestador,
+            servicio=servicio_confirmado,
+        )
+        Contratacion.objects.create(
+            fecha=fecha,
+            fecha_solicitud=timezone.now().date(),
+            estado="Rechazado",
+            observacion="{}",
+            prestador=prestador,
+            servicio=servicio_rechazado,
+        )
+
+        session = self.client.session
+        session["usuario_id"] = usuario.id_usuario
+        session.save()
+
+        response = self.client.get("/prestador/home", secure=True, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Servicio confirmado")
+        self.assertNotContains(response, "Servicio rechazado")
 
     def test_servicioprestador_no_inventa_servicio_para_prestador_nuevo(self):
         usuario = Usuario.objects.create(

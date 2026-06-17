@@ -1,12 +1,26 @@
 from .common import *
 
 
+def _proximas_contrataciones_visibles(prestador, limite):
+    if not prestador:
+        return Contratacion.objects.none()
+
+    hoy = timezone.localdate()
+    return (
+        Contratacion.objects.filter(prestador=prestador)
+        .exclude(fecha=None)
+        .exclude(Q(estado__icontains="rechaz") | Q(estado__icontains="cancel"))
+        .filter(fecha__gte=hoy)
+        .order_by("fecha")[:limite]
+    )
+
+
 def prestador_home(request):
     prestador = Prestador.objects.filter(usuario=request.usuario).first()
     servicios_qs = _get_or_create_prestador_services(prestador)
     servicios_activos = servicios_qs.count() if prestador else 0
     contrataciones = Contratacion.objects.filter(prestador=prestador) if prestador else Contratacion.objects.none()
-    proximas = contrataciones.exclude(fecha=None).filter(fecha__gte=timezone.now().date()).order_by("fecha")[:4]
+    proximas = _proximas_contrataciones_visibles(prestador, 4)
     califs = Calificacion.objects.filter(prestador=prestador) if prestador else Calificacion.objects.none()
     promedio = califs.aggregate(avg=Avg("puntuacion")).get("avg") or 0
     ganancias = (
@@ -118,7 +132,7 @@ def prestador_dashboard(request):
         ultimas.append({"cliente": cliente_name, "comentario": c.comentario, "puntuacion": c.puntuacion})
 
     # proximas citas
-    proximas = contrataciones.exclude(fecha=None).filter(fecha__gte=timezone.now().date()).order_by("fecha")[:5]
+    proximas = _proximas_contrataciones_visibles(prestador, 5)
 
     return render(
         request,
