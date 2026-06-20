@@ -194,7 +194,9 @@ def _get_programmed_datetime(contratacion: Contratacion):
         if hora is not None:
             return datetime.combine(contratacion.fecha, hora)
 
-    return datetime.combine(contratacion.fecha, datetime.min.time())
+    # Si no hay hora válida, dejamos expirar al final del día para no
+    # rechazar de inmediato una solicitud creada para "hoy".
+    return datetime.combine(contratacion.fecha, datetime.max.time().replace(microsecond=0))
 
 
 def _apply_auto_contratacion_estado(contratacion: Contratacion, now=None):
