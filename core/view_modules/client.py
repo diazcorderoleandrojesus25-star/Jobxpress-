@@ -355,10 +355,33 @@ def cliente_solicitud(request):
     payload = _parse_body(request)
     prestador_id = payload.get("prestador_id")
     servicio_nombre = (payload.get("servicio") or "").strip()
+    fecha_raw = (payload.get("fecha") or "").strip()
+    hora_raw = (payload.get("hora") or "").strip()
 
     prestador = Prestador.objects.filter(id_prestador=prestador_id).first() if prestador_id else None
     if prestador is None:
         return _json_error("Prestador no encontrado", status=400)
+
+    if fecha_raw:
+        try:
+            fecha_dt = datetime.strptime(fecha_raw, "%Y-%m-%d").date()
+        except ValueError:
+            return _json_error("Fecha invalida", status=400)
+
+        if hora_raw:
+            try:
+                hora_dt = datetime.strptime(hora_raw, "%H:%M").time()
+            except ValueError:
+                return _json_error("Hora invalida", status=400)
+        else:
+            hora_dt = datetime.max.time().replace(microsecond=0)
+
+        programada = datetime.combine(fecha_dt, hora_dt)
+        now = timezone.localtime(timezone.now())
+        if timezone.is_aware(now) and timezone.is_naive(programada):
+            programada = timezone.make_aware(programada, now.tzinfo)
+        if programada <= now:
+            return _json_error("La fecha y hora deben ser futuras.", status=400)
 
     servicio = None
     if payload.get("servicio_id"):

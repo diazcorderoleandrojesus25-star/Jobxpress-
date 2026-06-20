@@ -10,6 +10,15 @@
         return el ? el.value : "";
     }
 
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(";").shift();
+        }
+        return "";
+    }
+
     function showError(message) {
         const text = message || "No se pudo conectar con el servidor.";
         if (window.Swal) {
@@ -71,10 +80,17 @@
                 }
 
                 const config = window.JobxpressRequestConfig || {};
+                const csrfToken = getCookie("csrftoken");
                 try {
                     const response = await fetch("/cliente/solicitud", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
+                            ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+                        },
+                        credentials: "same-origin",
                         body: JSON.stringify({
                             prestador_id: prestadorId,
                             servicio_id: config.serviceId ?? null,
