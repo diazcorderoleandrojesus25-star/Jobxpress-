@@ -5,14 +5,176 @@ def _proximas_contrataciones_visibles(prestador, limite):
     if not prestador:
         return Contratacion.objects.none()
 
-    hoy = timezone.localdate()
-    return (
+    visibles = []
+    now = timezone.now()
+    contrataciones = (
         Contratacion.objects.filter(prestador=prestador)
         .exclude(fecha=None)
         .exclude(Q(estado__icontains="rechaz") | Q(estado__icontains="cancel"))
-        .filter(fecha__gte=hoy)
-        .order_by("fecha")[:limite]
+        .order_by("fecha", "id_contratacion")
     )
+    for contratacion in contrataciones:
+        if _contratacion_esta_expirada(contratacion, now=now):
+            continue
+        visibles.append(contratacion)
+        if len(visibles) >= limite:
+            break
+    return visibles
+
+
+def _cliente_nombre_desde_link(link):
+    if not link or not link.cliente:
+        return ""
+
+    nombre = f"{(link.cliente.nombre or '').strip()} {(link.cliente.apellido or '').strip()}".strip()
+    return nombre or (link.cliente.email or "").strip()
+
+
+def _cliente_nombre_desde_observacion(contratacion):
+    obs = _parse_observacion(getattr(contratacion, "observacion", None))
+    return (obs.get("cliente_nombre") or obs.get("cliente") or "").strip()
+
+
+def _cliente_nombre_map(contrataciones):
+    nombres = {}
+    if not contrataciones:
+        return nombres
+
+    for link in ClienteContratacion.objects.filter(contratacion__in=contrataciones).select_related("cliente"):
+        nombre = _cliente_nombre_desde_link(link)
+        if nombre:
+            nombres[link.contratacion_id] = nombre
+
+    return nombres
+
+
+def _monto_desde_observacion(contratacion):
+    obs = _parse_observacion(getattr(contratacion, "observacion", None))
+    try:
+        return float(obs.get("monto") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _contratacion_programada_datetime(contratacion):
+    fecha = getattr(contratacion, "fecha", None)
+    if not fecha:
+        return None
+
+    obs = _parse_observacion(getattr(contratacion, "observacion", None))
+    hora_raw = (obs.get("hora") or "").strip()
+    if hora_raw:
+        for fmt in ("%H:%M", "%H:%M:%S"):
+            try:
+                hora = datetime.strptime(hora_raw, fmt).time()
+                return datetime.combine(fecha, hora)
+            except ValueError:
+                continue
+
+    return datetime.combine(fecha, datetime.max.time().replace(microsecond=0))
+
+
+def _contratacion_esta_expirada(contratacion, now=None):
+    programada = _contratacion_programada_datetime(contratacion)
+    if programada is None:
+        return False
+
+    now = now or timezone.now()
+    if timezone.is_aware(now) and timezone.is_naive(programada):
+        programada = timezone.make_aware(programada, now.tzinfo)
+    return now >= programada
+
+
+def _ganancias_prestador_data(prestador, limite=20):
+    if not prestador:
+        return 0.0, 0, []
+
+    contrataciones_qs = (
+        Contratacion.objects.filter(prestador=prestador)
+        .select_related("servicio")
+        .order_by("-fecha_solicitud", "-id_contratacion")
+    )
+    cliente_map = _cliente_nombre_map(contrataciones_qs)
+
+    items = []
+    total = 0.0
+    count = 0
+    procesadas = set()
+
+    pagos_qs = (
+        Pago.objects.filter(contratacion__prestador=prestador)
+        .select_related("contratacion__servicio")
+        .order_by("-fecha", "-id_pago")
+    )
+    for pago in pagos_qs:
+        contratacion = pago.contratacion
+        cliente_name = cliente_map.get(contratacion.id_contratacion) if contratacion else ""
+        if not cliente_name and contratacion:
+            cliente_name = _cliente_nombre_desde_observacion(contratacion)
+        if not cliente_name:
+            cliente_name = "Cliente"
+
+        monto = float(pago.monto or 0)
+        if monto <= 0 and contratacion:
+            monto = _monto_desde_observacion(contratacion)
+
+        fecha_item = pago.fecha.strftime("%Y-%m-%d") if pago.fecha else "-"
+        if contratacion and contratacion.fecha_solicitud:
+            fecha_item = contratacion.fecha_solicitud.strftime("%Y-%m-%d")
+
+        items.append(
+            {
+                "cliente": cliente_name,
+                "fecha": fecha_item,
+                "monto": monto,
+                "servicio": (
+                    contratacion.servicio.nombre
+                    if contratacion and contratacion.servicio
+                    else "Servicio"
+                ),
+                "inicial": (cliente_name[:1] or "C").upper(),
+                "_sort": pago.fecha or contratacion.fecha_solicitud if contratacion else None,
+            }
+        )
+        total += monto
+        count += 1
+        if contratacion:
+            procesadas.add(contratacion.id_contratacion)
+
+    for contratacion in contrataciones_qs:
+        if contratacion.id_contratacion in procesadas:
+            continue
+
+        estado_low = (contratacion.estado or "").lower()
+        if "confirm" not in estado_low and "complet" not in estado_low:
+            continue
+
+        monto = _monto_desde_observacion(contratacion)
+        if monto <= 0:
+            continue
+
+        cliente_name = cliente_map.get(contratacion.id_contratacion) or _cliente_nombre_desde_observacion(contratacion) or "Cliente"
+        fecha_item = contratacion.fecha_solicitud.strftime("%Y-%m-%d") if contratacion.fecha_solicitud else (
+            contratacion.fecha.strftime("%Y-%m-%d") if contratacion.fecha else "-"
+        )
+        items.append(
+            {
+                "cliente": cliente_name,
+                "fecha": fecha_item,
+                "monto": monto,
+                "servicio": contratacion.servicio.nombre if contratacion.servicio else "Servicio",
+                "inicial": (cliente_name[:1] or "C").upper(),
+                "_sort": contratacion.fecha_solicitud or contratacion.fecha,
+            }
+        )
+        total += monto
+        count += 1
+
+    items.sort(key=lambda item: item.get("_sort") or timezone.localdate(), reverse=True)
+    for item in items:
+        item.pop("_sort", None)
+
+    return total, count, items[:limite]
 
 
 def prestador_home(request):
@@ -23,11 +185,7 @@ def prestador_home(request):
     proximas = _proximas_contrataciones_visibles(prestador, 4)
     califs = Calificacion.objects.filter(prestador=prestador) if prestador else Calificacion.objects.none()
     promedio = califs.aggregate(avg=Avg("puntuacion")).get("avg") or 0
-    ganancias = (
-        Pago.objects.filter(contratacion__prestador=prestador).aggregate(total=Sum("monto")).get("total") or 0
-        if prestador
-        else 0
-    )
+    ganancias, _, _ = _ganancias_prestador_data(prestador, limite=0)
 
     return render(
         request,
@@ -190,38 +348,8 @@ def prestador_page(request, page):
         )
     if page == "ganancias":
         prestador = Prestador.objects.filter(usuario=request.usuario).first()
-        pagos = (
-            Pago.objects.filter(contratacion__prestador=prestador)
-            .select_related("contratacion__servicio")
-            .order_by("-fecha")
-            if prestador
-            else Pago.objects.none()
-        )
-        total = pagos.aggregate(total=Sum("monto")).get("total") or 0
-        count = pagos.count()
+        total, count, pagos = _ganancias_prestador_data(prestador)
         promedio = int(total / count) if count else 0
-
-        items = []
-        for p in pagos[:20]:
-            cliente_link = (
-                ClienteContratacion.objects.filter(contratacion=p.contratacion)
-                .select_related("cliente")
-                .first()
-            )
-            cliente_name = (
-                f"{cliente_link.cliente.nombre} {cliente_link.cliente.apellido}"
-                if cliente_link and cliente_link.cliente
-                else "Cliente"
-            )
-            items.append(
-                {
-                    "cliente": cliente_name,
-                    "fecha": p.fecha.strftime("%Y-%m-%d") if p.fecha else "-",
-                    "monto": p.monto,
-                    "servicio": p.contratacion.servicio.nombre if p.contratacion and p.contratacion.servicio else "Servicio",
-                    "inicial": (cliente_name[:1] or "C").upper(),
-                }
-            )
 
         return render(
             request,
@@ -230,7 +358,7 @@ def prestador_page(request, page):
                 "total": int(total),
                 "count": count,
                 "promedio": promedio,
-                "pagos": items,
+                "pagos": pagos,
             },
         )
     if page == "valoraciones":
@@ -345,16 +473,19 @@ def prestador_agenda_data(request):
         return JsonResponse({"pendientes": [], "aceptadas": [], "eventos": []})
 
     contrataciones = Contratacion.objects.filter(prestador=prestador).select_related("servicio")
+    cliente_map = _cliente_nombre_map(contrataciones)
+    now = timezone.now()
 
     pendientes = []
     aceptadas = []
     eventos = []
     for c in contrataciones:
         estado = (c.estado or "").lower()
-        cliente_link = ClienteContratacion.objects.filter(contratacion=c).select_related("cliente").first()
-        cliente_name = None
-        if cliente_link and cliente_link.cliente:
-            cliente_name = f"{cliente_link.cliente.nombre} {cliente_link.cliente.apellido}"
+        if "rechaz" in estado or "cancel" in estado:
+            continue
+
+        expirada = _contratacion_esta_expirada(c, now=now)
+        cliente_name = cliente_map.get(c.id_contratacion) or _cliente_nombre_desde_observacion(c)
 
         obs = _parse_observacion(c.observacion)
         item = {
@@ -369,19 +500,23 @@ def prestador_agenda_data(request):
             "estado": c.estado or "",
         }
 
-        if "pend" in estado:
+        if not expirada and "pend" in estado:
             pendientes.append(item)
-        elif "rechaz" in estado:
-            continue
-        else:
+        elif not expirada:
             aceptadas.append(item)
 
         if c.fecha:
+            if expirada:
+                color = "#8a8a8a"
+            elif "confirm" in estado or "acept" in estado or "proceso" in estado or "activo" in estado:
+                color = "#4CAF50"
+            else:
+                color = "#29B6F6"
             eventos.append({
                 "title": item["servicio"],
                 "start": str(c.fecha),
-                "backgroundColor": "#4CAF50" if "confirm" in estado else "#29B6F6",
-                "borderColor": "#4CAF50" if "confirm" in estado else "#29B6F6",
+                "backgroundColor": color,
+                "borderColor": color,
                 "textColor": "white",
             })
 

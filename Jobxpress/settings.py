@@ -25,7 +25,8 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 if load_dotenv:
-    load_dotenv(BASE_DIR / ".env")
+    # Local .env should win over inherited shell values during development.
+    load_dotenv(BASE_DIR / ".env", override=True)
 
 
 def env_bool(name: str, default: bool = False) -> bool:

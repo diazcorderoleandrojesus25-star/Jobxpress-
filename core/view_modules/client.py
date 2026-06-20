@@ -395,6 +395,7 @@ def cliente_solicitud(request):
             "descripcion": descripcion,
             "hora": hora,
             "monto": monto,
+            "cliente_nombre": f"{request.usuario.nombre} {request.usuario.apellido}".strip(),
         },
         ensure_ascii=False,
     )

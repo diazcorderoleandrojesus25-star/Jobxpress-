@@ -291,7 +291,7 @@ def api_contrataciones(request):
         prestador_id=payload.get("idPrestador"),
         servicio_id=payload.get("idServicio"),
     )
-    id_cliente = payload.get("idCliente")
+    id_cliente = payload.get("idCliente") or getattr(getattr(request, "usuario", None), "id_usuario", None)
     if id_cliente:
         ClienteContratacion.objects.create(cliente_id=id_cliente, contratacion=contratacion)
 
