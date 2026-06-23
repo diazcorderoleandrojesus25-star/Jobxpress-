@@ -50,7 +50,6 @@ class Command(BaseCommand):
         now = timezone.now()
         created_users = 0
         created_prestadores = 0
-        created_servicios = 0
 
         with transaction.atomic():
             rol_prestador, _ = Rol.objects.get_or_create(
@@ -58,7 +57,7 @@ class Command(BaseCommand):
                 defaults={"id_rol": 3},
             )
 
-            for service_id, service_name, service_label, precio_min, precio_max in BASE_SERVICES:
+            for service_id, _service_name, service_label, _precio_min, _precio_max in BASE_SERVICES:
                 base_service = (
                     Servicio.objects.filter(id_servicio=service_id)
                     .select_related("categoria")
@@ -128,35 +127,10 @@ class Command(BaseCommand):
                         categoria_id=base_service.categoria_id,
                     )
 
-                    servicio = Servicio.objects.filter(
-                        nombre=service_name,
-                        prestador=prestador,
-                    ).first()
-                    if servicio is None:
-                        Servicio.objects.create(
-                            nombre=service_name,
-                            descripcion=base_service.descripcion,
-                            precio_min=precio_min,
-                            precio_max=precio_max,
-                            activo=1,
-                            prestador=prestador,
-                            categoria_id=base_service.categoria_id,
-                        )
-                        created_servicios += 1
-                    else:
-                        Servicio.objects.filter(pk=servicio.pk).update(
-                            descripcion=base_service.descripcion,
-                            precio_min=precio_min,
-                            precio_max=precio_max,
-                            activo=1,
-                            categoria_id=base_service.categoria_id,
-                        )
-
         self.stdout.write(
             self.style.SUCCESS(
                 "Prestadores demo adicionales sincronizados sin borrar usuarios existentes: "
                 f"+{created_users} usuarios, "
-                f"+{created_prestadores} prestadores, "
-                f"+{created_servicios} servicios."
+                f"+{created_prestadores} prestadores."
             )
         )
