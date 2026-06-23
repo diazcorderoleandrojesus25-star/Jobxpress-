@@ -44,14 +44,12 @@ HOURS = ["8:00am - 5:00pm", "9:00am - 6:00pm", "7:00am - 3:00pm"]
 
 
 class Command(BaseCommand):
-    help = "Crea o actualiza los 3 prestadores demo canónicos por servicio, sin borrar usuarios existentes."
+    help = "Crea o actualiza los 3 prestadores demo canonicos por servicio, sin crear servicios nuevos."
 
     def handle(self, *args, **options):
         now = timezone.now()
         created_users = 0
         created_prestadores = 0
-        created_servicios = 0
-        updated_servicios = 0
 
         with transaction.atomic():
             rol_prestador, _ = Rol.objects.get_or_create(
@@ -109,39 +107,10 @@ class Command(BaseCommand):
                         categoria_id=base_service.categoria_id,
                     )
 
-                    servicio = (
-                        Servicio.objects.filter(nombre=service_name, prestador=prestador)
-                        .order_by("id_servicio")
-                        .first()
-                    )
-                    if servicio is None:
-                        Servicio.objects.create(
-                            nombre=service_name,
-                            descripcion=base_service.descripcion,
-                            precio_min=precio_min,
-                            precio_max=precio_max,
-                            activo=1,
-                            prestador=prestador,
-                            categoria_id=base_service.categoria_id,
-                        )
-                        created_servicios += 1
-                    else:
-                        Servicio.objects.filter(pk=servicio.pk).update(
-                            descripcion=base_service.descripcion,
-                            precio_min=precio_min,
-                            precio_max=precio_max,
-                            activo=1,
-                            categoria_id=base_service.categoria_id,
-                        )
-                        updated_servicios += 1
-
         self.stdout.write(
             self.style.SUCCESS(
                 "Prestadores demo sincronizados sin borrar usuarios existentes: "
                 f"+{created_users} usuarios, "
-                f"+{created_prestadores} prestadores, "
-                f"+{created_servicios} servicios, "
-                f"{updated_servicios} servicios actualizados."
+                f"+{created_prestadores} prestadores."
             )
         )
-

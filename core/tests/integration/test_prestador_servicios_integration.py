@@ -71,7 +71,7 @@ class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
                 categoria=self.categoria,
             ).exists()
         )
-        self.assertTrue(Servicio.objects.filter(prestador=prestador, id_servicio=self.servicio.id_servicio).exists())
+        self.assertFalse(Servicio.objects.filter(prestador=prestador, id_servicio=self.servicio.id_servicio).exists())
 
         session = self.client.session
         session["usuario_id"] = prestador.usuario.id_usuario
@@ -209,4 +209,5 @@ class PrestadorServiciosIntegrationTestCase(TransactionTestCase):
         response = self.client.get("/prestador/servicioPrestador", secure=True, follow=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No tienes servicios registrados.")
+        self.assertContains(response, self.servicio.nombre)
+        self.assertNotContains(response, "No tienes servicios registrados.")

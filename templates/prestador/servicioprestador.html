@@ -52,10 +52,13 @@
                     <span class="pm-pill">$ {{ servicio.precio_min }} - {{ servicio.precio_max }} COP</span>
                     {% if servicio.categoria %}<span class="pm-pill">{{ servicio.categoria.nombre }}</span>{% endif %}
                 {% else %}
-                    <span class="pm-pill">Sin servicio</span>
+                    <span class="pm-pill">Perfil profesional</span>
+                    {% if prestador and prestador.dias_atencion %}<span class="pm-pill">{{ prestador.dias_atencion }}</span>{% endif %}
+                    {% if prestador and prestador.horario_atencion %}<span class="pm-pill">{{ prestador.horario_atencion }}</span>{% endif %}
+                    <span class="pm-pill">{{ categorias_count }} categoria{% if categorias_count != 1 %}s{% endif %}</span>
                 {% endif %}
             </div>
-            <p id="textoServicio">{% if servicio %}{{ prestador.descripcion|default:servicio.descripcion }}{% else %}<span class="pm-empty"><span>🧰</span>No tienes servicios registrados.</span>{% endif %}</p>
+            <p id="textoServicio">{% if servicio %}{{ prestador.descripcion|default:servicio.descripcion }}{% else %}{{ prestador.descripcion|default:"Completa tu perfil profesional para mostrar tu especialidad, horarios y disponibilidad." }}{% endif %}</p>
             {% if servicio %}
             <a href="#" id="btnEditarServicio" class="pm-btn primary">Editar informacion</a>
             {% endif %}
@@ -73,7 +76,8 @@
             <div class="pm-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></div>
             <h3>Desempeno y reputacion</h3>
             <p>Valoracion promedio: <strong>{{ promedio }}/5</strong> ★</p>
-            <p>Servicios publicados: <strong>{{ servicios|length }}</strong></p>
+            <p>Categorias activas: <strong>{{ categorias_count }}</strong></p>
+            <p>Contrataciones totales: <strong>{{ contrataciones_total }}</strong></p>
             <a href="/prestador/valoraciones" class="pm-btn ghost">Ver valoraciones</a>
         </article>
     </section>

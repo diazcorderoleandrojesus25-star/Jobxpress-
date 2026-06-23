@@ -165,9 +165,6 @@ def registro_view(request):
             .first()
         )
         if servicio_sel and servicio_sel.categoria:
-            if servicio_sel.prestador_id in (None, prestador.id_prestador):
-                servicio_sel.prestador = prestador
-                servicio_sel.save(update_fields=["prestador"])
             PrestadorCategoria.objects.get_or_create(
                 prestador=prestador,
                 categoria=servicio_sel.categoria,

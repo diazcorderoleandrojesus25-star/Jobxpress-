@@ -331,6 +331,10 @@ def prestador_page(request, page):
         prestador = Prestador.objects.filter(usuario=request.usuario).first()
         servicios = _get_or_create_prestador_services(prestador)
         servicio = servicios.first()
+        categorias_count = prestador.categorias.count() if prestador else 0
+        contrataciones_total = (
+            Contratacion.objects.filter(prestador=prestador).count() if prestador else 0
+        )
         promedio = (
             Calificacion.objects.filter(prestador=prestador).aggregate(avg=Avg("puntuacion")).get("avg") or 0
             if prestador
@@ -344,6 +348,8 @@ def prestador_page(request, page):
                 "servicios": servicios,
                 "promedio": round(promedio, 1) if promedio else 0,
                 "prestador": prestador,
+                "categorias_count": categorias_count,
+                "contrataciones_total": contrataciones_total,
             },
         )
     if page == "ganancias":
@@ -434,29 +440,40 @@ def prestador_servicio_actualizar(request):
 
     servicio = None
     if servicio_id:
-        servicio = Servicio.objects.filter(id_servicio=servicio_id, prestador=prestador).first()
+        servicio = (
+            Servicio.objects.select_related("categoria")
+            .filter(id_servicio=servicio_id, activo=1)
+            .filter(Q(prestador__isnull=True) | Q(prestador=prestador))
+            .first()
+        )
     if servicio is None:
         servicio = _get_or_create_prestador_services(prestador).first()
 
     if servicio is None:
         return _json_error("Servicio no encontrado", status=404)
 
+    if not PrestadorCategoria.objects.filter(prestador=prestador, categoria=servicio.categoria).exists():
+        return _json_error("Servicio no encontrado", status=404)
+
     if descripcion:
         prestador.descripcion = descripcion
+    if descripcion:
+        prestador.save(update_fields=["descripcion"])
+    update_fields = []
     if precio_min:
         try:
             servicio.precio_min = float(precio_min)
+            update_fields.append("precio_min")
         except ValueError:
             pass
     if precio_max:
         try:
             servicio.precio_max = float(precio_max)
+            update_fields.append("precio_max")
         except ValueError:
             pass
-    if servicio.prestador_id == prestador.id_prestador:
-        servicio.save()
-    if descripcion:
-        prestador.save(update_fields=["descripcion"])
+    if update_fields:
+        servicio.save(update_fields=update_fields)
 
     return JsonResponse(
         {
