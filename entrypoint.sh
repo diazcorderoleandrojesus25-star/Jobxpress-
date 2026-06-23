@@ -2,6 +2,7 @@
 set -e
 
 python manage.py migrate --noinput
+python manage.py add_extra_demo_prestadores
 python manage.py collectstatic --noinput
 
 exec gunicorn Jobxpress.wsgi:application --bind 0.0.0.0:${PORT:-8000}
